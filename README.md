@@ -8,8 +8,21 @@ Documents are organized by protocol layer:
 ColinkAPI/
 ├── CoLinkServer/           — Server protocol (device ↔ cloud server)
 │   ├── auth/               — Authentication module
+│   │   ├── register.md     — User registration
+│   │   ├── login.md        — User login
+│   │   ├── logout.md       — Logout (revoke refresh token)
+│   │   ├── refresh.md      — Refresh access token
+│   │   ├── change-password.md — Change password
+│   │   └── me.md           — Get current user info / token check
 │   ├── devices/            — Device management module
+│   │   ├── register.md     — Bind new device
+│   │   ├── list.md         — List all devices
+│   │   ├── update.md       — Update device name
+│   │   ├── delete.md       — Unbind device
+│   │   └── rotate-key.md   — Rotate device public key
 │   └── websocket/          — Cloud WebSocket module
+│       ├── ticket.md       — Obtain WebSocket auth ticket
+│       └── v1.md           — WebSocket protocol v1
 ├── CoLinkLAN/              — LAN protocol (device ↔ device, local network)
 │   ├── discovery.md        — mDNS service discovery
 │   └── handshake.md        — Peer authentication handshake

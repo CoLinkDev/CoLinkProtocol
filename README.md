@@ -46,3 +46,21 @@ ColinkAPI/
 - IDs: UUID v4
 - Response envelope: `{ "code": 0, "data": {...}, "message": "ok" }`
 - Error envelope: `{ "code": <errorCode>, "data": null, "message": "description" }`
+
+## Error Codes
+
+Code `0` = success. Positive codes are module-specific (defined in each API doc). Negative codes are global.
+
+### Global Error Codes
+
+| Code | Message              | HTTP Status | Description                                    |
+|------|----------------------|-------------|------------------------------------------------|
+| -1   | internal error       | 500         | Unhandled error, catch-all fallback            |
+| 1030 | unauthorized         | 401         | Missing or invalid access token (middleware)   |
+| 3001 | rate limited         | 429         | Too many requests                              |
+| 4001 | invalid request body | 400         | JSON parse error or missing required fields    |
+| 4002 | invalid parameter    | 400         | Path/query parameter validation failure        |
+
+Notes:
+- Code `-1` is returned when no specific error code matches. Never expose internal details (stack trace, SQL) in the message.
+- Module-specific codes: `1xxx` = auth, `2xxx` = device. See individual endpoint docs.

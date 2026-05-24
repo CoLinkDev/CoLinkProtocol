@@ -22,6 +22,7 @@ No body required.
   "data": {
     "userId": "550e8400-e29b-41d4-a716-446655440000",
     "email": "user@example.com",
+    "username": "brook.user",
     "createdAt": "2026-01-15T08:30:00Z"
   },
   "message": "ok"

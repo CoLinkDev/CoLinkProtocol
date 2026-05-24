@@ -10,14 +10,14 @@ POST /api/v1/auth/login
 
 ## Request
 
-| Field    | Type   | Required | Description |
-|----------|--------|----------|-------------|
-| email    | string | yes      | User email  |
-| password | string | yes      | Password    |
+| Field      | Type   | Required | Description       |
+|------------|--------|----------|-------------------|
+| identifier | string | yes      | Email or username |
+| password   | string | yes      | Password          |
 
 ```json
 {
-  "email": "user@example.com",
+  "identifier": "user@example.com",
   "password": "securepass123"
 }
 ```
@@ -40,5 +40,5 @@ POST /api/v1/auth/login
 
 | Code | Message             | Description              |
 |------|---------------------|--------------------------|
-| 1010 | invalid credentials | Wrong email or password  |
+| 1010 | invalid credentials | Wrong identifier or password |
 | 1011 | account disabled    | Account has been banned  |

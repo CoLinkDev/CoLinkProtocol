@@ -1,4 +1,6 @@
-# File Transfer
+# File Transfer (DEPRECATED)
+
+> **Deprecated.** This protocol (v1) is superseded by [file-transfer-v2.md](./file-transfer-v2.md). Do not use for new implementations.
 
 Transfer files between devices via multi-step negotiation.
 

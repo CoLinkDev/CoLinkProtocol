@@ -2,13 +2,33 @@
 
 Cluster membership and failure detection using [SWIM](https://www.cs.cornell.edu/projects/Quicksilver/public_pdfs/SWIM.pdf). Runs over HTTP on the existing peer server.
 
-## Transport
+## Transport & Security
 
 ```
-POST http://<ip>:27777/peer/swim
+POST http://<ip>:<port>/peer/swim
 ```
 
 Request and response bodies are SWIM messages. No additional port or persistent connection required. All operations are blocking request-response — one probe round must complete before the next begins.
+
+### Request Signing
+
+Every request includes authentication headers:
+
+```
+POST /peer/swim
+Content-Type: application/json
+X-Device-Id: <sender's deviceId>
+X-Timestamp: <utcNowMillis>
+X-Signature: base64(sign(body + timestamp, senderPrivateKey))
+```
+
+### Validation (receiver side)
+
+1. `X-Device-Id` not in local known device list → reject
+2. Verify signature using sender's public key → fail → reject
+3. `X-Timestamp` drift > 30s from local UTC → reject
+4. Request body > 16KB → reject
+5. Any `incarnation` in gossip > receiver's UTC now + 5 minutes → reject that entry
 
 ## Parameters (Recommended Defaults)
 
@@ -138,7 +158,3 @@ SWIM is the sole authority on membership state. WebSocket manages connection-lev
 | WS: active, SWIM ping: failing | SWIM proceeds normally — WS liveness does not override SWIM |
 
 SWIM and WebSocket keepalive (`connection.md`) are orthogonal. WS activity is not used as alive evidence for membership decisions.
-
-## Activation
-
-Runs only in realtime mode (app in foreground). Background mode is defined separately.

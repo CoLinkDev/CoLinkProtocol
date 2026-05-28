@@ -2,33 +2,18 @@
 
 Cluster membership and failure detection using [SWIM](https://www.cs.cornell.edu/projects/Quicksilver/public_pdfs/SWIM.pdf). Runs over HTTP on the existing peer server.
 
-## Transport & Security
+## Transport
 
 ```
-POST http://<ip>:<port>/peer/swim
+POST http://<ip>:<port>/peer/swim/v1
 ```
 
 Request and response bodies are SWIM messages. No additional port or persistent connection required. All operations are blocking request-response — one probe round must complete before the next begins.
 
-### Request Signing
-
-Every request includes authentication headers:
-
-```
-POST /peer/swim
-Content-Type: application/json
-X-Device-Id: <sender's deviceId>
-X-Timestamp: <utcNowMillis>
-X-Signature: base64(sign(body + timestamp, senderPrivateKey))
-```
-
 ### Validation (receiver side)
 
-1. `X-Device-Id` not in local known device list → reject
-2. Verify signature using sender's public key → fail → reject
-3. `X-Timestamp` drift > 30s from local UTC → reject
-4. Request body > 16KB → reject
-5. Any `incarnation` in gossip > receiver's UTC now + 5 minutes → reject that entry
+1. Request body > 16KB → reject
+2. Any `incarnation` in gossip > receiver's UTC now + 5 minutes → reject that entry
 
 ## Parameters (Recommended Defaults)
 
@@ -39,7 +24,7 @@ X-Signature: base64(sign(body + timestamp, senderPrivateKey))
 | indirectPingTimeout | 500ms | Timeout for intermediary's ping to target |
 | pingReqFanout     | 2       | min(configured, members - 2) |
 | suspectTimeout    | 5000ms  | Time before suspect becomes dead |
-| maxGossipPerMsg   | 10       | Older entries displaced by newer ones |
+| maxGossipPerMsg   | 10      | Older entries displaced by newer ones |
 
 These are recommended starting values. Implementations may adjust based on actual situation.
 
@@ -134,7 +119,7 @@ This prevents stale IPs from polluting membership state.
 
 New nodes join by sending a `ping` to any peer discovered via mDNS (see `discovery.md`). The ping's gossip carries the new node's own entry: `{ deviceId, state: "alive", incarnation: <utcNowMillis> }`.
 
-Receivers that encounter an unknown `deviceId` transitioning to `alive` treat this as a **memberJoined** event (triggering WebSocket connection setup, etc.).
+Receivers that encounter an unknown `deviceId` transitioning to `alive` treat this as a **memberJoined** event (triggering WebSocket connection setup, etc.). No identity verification is performed at this layer.
 
 A node re-joining after `dead` or `left` must use a higher incarnation than its previous value.
 
@@ -157,4 +142,4 @@ SWIM is the sole authority on membership state. WebSocket manages connection-lev
 | SWIM: alive, WS: disconnected | Reconnect WS only, membership unchanged |
 | WS: active, SWIM ping: failing | SWIM proceeds normally — WS liveness does not override SWIM |
 
-SWIM and WebSocket keepalive (`connection.md`) are orthogonal. WS activity is not used as alive evidence for membership decisions.
+SWIM and WebSocket keepalive (see `websocket.md`) are orthogonal. WS activity is not used as alive evidence for membership decisions.

@@ -14,12 +14,14 @@ Header: `Authorization: Bearer <token>`
 
 | Field     | Type   | Required | Description                                           |
 |-----------|--------|----------|-------------------------------------------------------|
+| deviceId  | string | yes      | Client-generated UUID v4                              |
 | name      | string | yes      | Device display name                                   |
 | type      | string | yes      | `windows` \| `android` \| `macos` \| `linux` \| `ios` |
 | publicKey | string | yes      | Device public key (base64), generated locally         |
 
 ```json
 {
+  "deviceId": "660e8400-e29b-41d4-a716-446655440001",
   "name": "My Desktop",
   "type": "windows",
   "publicKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A..."
@@ -39,7 +41,7 @@ Header: `Authorization: Bearer <token>`
 }
 ```
 
-`deviceSecret` is used for WebSocket authentication. Store securely on device.
+`deviceId` is echoed back from the client-submitted value. `deviceSecret` is used for WebSocket authentication. Store securely on device.
 
 ## Errors
 
@@ -47,3 +49,5 @@ Header: `Authorization: Bearer <token>`
 |------|----------------------|----------------------------------|
 | 2001 | device limit reached | Max devices per account exceeded |
 | 2002 | invalid device type  | Unsupported device type          |
+| 2003 | invalid device id    | Not a valid UUID v4              |
+| 2004 | device id conflict   | The submitted deviceId already exists |

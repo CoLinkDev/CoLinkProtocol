@@ -23,55 +23,35 @@ All messages use a unified envelope:
 
 Type namespaces:
 
-| Namespace | Purpose |
-|-----------|---------|
-| `pair`    | Device pairing |
-| `auth`    | Identity verification |
-| (others)  | Business messages as defined in CoLinkBusiness |
+| Namespace   | Purpose |
+|-------------|---------|
+| `handshake` | Connection handshake (identity verification + pairing) |
+| (others)    | Business messages as defined in CoLinkBusiness |
 
-## Authentication
+## Handshake
 
-After a WebSocket connection is established, the initiator determines which path to take:
+After a WebSocket connection is established, the initiator sends a `handshake.v1.request`. The receiver determines how to proceed based on local trust state.
 
-```
-Connection established
-  ├─ Peer's deviceId exists in trust store AND own key has not rotated
-  │     → Identity verification (auth.v1.hello exchange)
-  │         ├─ Success → Business messages
-  │         └─ Signature mismatch (deviceId known, peer may have rotated) 
-  │               → Pairing
-  │               → Business messages (no hello needed)
-  │
-  └─ Peer's deviceId is unknown OR own key has rotated
-        → Pairing
-        → Business messages (no hello needed)
-```
+### Event Types
 
-### Identity Verification
+| Type | Direction | Description |
+|------|-----------|-------------|
+| `handshake.v1.request`  | Initiator → Receiver | Initiate handshake with identity + signature |
+| `handshake.v1.exchange` | Receiver → Initiator | Return receiver's identity + signature |
+| `handshake.v1.accept`   | Receiver → Initiator | Handshake complete |
+| `handshake.v1.reject`   | Receiver → Initiator | Reject connection |
 
-For devices that already hold each other's public key in their local trust store (via prior pairing or cloud device list synchronization), identity is verified by a single round-trip signature exchange.
+### Message Definitions
 
-**Event type:** `auth.v1.hello`
-
-**Flow:**
-
-```
-Alice → Bob: auth.v1.hello { deviceId, timestamp, nonce, signature }
-Bob: verify signature using Alice's public key from trust store
-Bob → Alice: auth.v1.hello { deviceId, timestamp, nonce, signature }
-Alice: verify signature using Bob's public key from trust store
-Connection is ready for business messages
-```
-
-If verification fails due to unknown deviceId or timestamp drift > 30s, the verifying side closes the connection.
-
-**Message definition:**
+**handshake.v1.request / handshake.v1.exchange:**
 
 ```json
 {
-  "type": "auth.v1.hello",
+  "type": "handshake.v1.request",
   "payload": {
     "deviceId": "660e8400-...",
+    "publicKey": "base64(publicKey)",
+    "name": "Alice's Phone",
     "timestamp": 1716451200000,
     "nonce": "random-string-32chars",
     "signature": "base64(sign(deviceId + timestamp + nonce, privateKey))"
@@ -82,84 +62,118 @@ If verification fails due to unknown deviceId or timestamp drift > 30s, the veri
 | Field     | Type   | Description |
 |-----------|--------|-------------|
 | deviceId  | string | Sender's device ID |
+| publicKey | string | Sender's public key |
+| name      | string | Sender's device name |
 | timestamp | number | Current Unix milliseconds (reject if drift > 30s) |
-| nonce     | string | Random string, ensures each hello is unique |
+| nonce     | string | Random string, ensures each handshake is unique |
 | signature | string | Sign `deviceId + timestamp + nonce` with sender's private key |
 
-### Pairing
+**handshake.v1.accept:**
 
-Pairing establishes mutual trust between two devices that have not previously exchanged public keys. Upon successful pairing, both sides store the peer's `deviceId` and `publicKey` in their local trust store. The connection is then ready for business messages without an additional hello exchange.
-
-**Event types:**
-
-| Type | Direction | Description |
-|------|-----------|-------------|
-| `pair.v1.request`  | Initiator → Receiver | Request to pair |
-| `pair.v1.exchange` | Receiver → Initiator | Share receiver's public key for mutual verification |
-| `pair.v1.accept`   | Receiver → Initiator | Accept pairing (requires user confirmation) |
-| `pair.v1.reject`   | Receiver → Initiator | Reject pairing |
-
-Challenge 0 sub-protocol (signature verification, optional, decided by implementation):
-
-| Type | Description |
-|-------------------|
-| `pair.v1.challenge.0.v1.request`  | Send challenge to verify key ownership |
-| `pair.v1.challenge.0.v1.response` | Return signed challenge |
-
-**Flow:**
-
-```
-Alice → Bob: pair.v1.request { deviceId, publicKey, name }
-Bob → Alice: pair.v1.exchange { deviceId, publicKey, name }
-
-[optional: Challenge 0] Bob → Alice: pair.v1.challenge.0.v1.request { challenge: <random-bytes> }
-[optional: Challenge 0] Alice → Bob: pair.v1.challenge.0.v1.response { response: sign(challenge, Alice_privateKey) }
-[optional: Challenge 0] Bob: verify response against publicKey from the request
-
-[optional: Challenge 0] Alice → Bob: pair.v1.challenge.0.v1.request { challenge: <random-bytes> }
-[optional: Challenge 0] Bob → Alice: pair.v1.challenge.0.v1.response { response: sign(challenge, Bob_privateKey) }
-[optional: Challenge 0] Alice: verify response against publicKey from the exchange
-
-Bob: prompt user for confirmation
-Bob → Alice: pair.v1.accept { deviceId }
-         or  pair.v1.reject { reason }
-
-Both sides store peer's deviceId + publicKey in local trust store
-Connection is ready for business messages
+```json
+{
+  "type": "handshake.v1.accept",
+  "payload": {
+    "deviceId": "770f9500-..."
+  }
+}
 ```
 
-Steps marked `[optional: Challenge 0]` apply only when the implementation uses challenge verification (Scheme 0: signature verification).
+| Field    | Type   | Description |
+|----------|--------|-------------|
+| deviceId | string | Receiver's device ID |
 
-### Key Rotation
+**handshake.v1.reject:**
 
-When the same `deviceId` pairs again with a different public key, the implementation must explicitly warn the user that the key has changed.
-
-**Scenario — hello fails due to peer's key change:**
-
-```
-Alice → Bob: auth.v1.hello { ... }
-Bob → Alice: auth.v1.hello { ... }  (Bob signs with new key)
-Alice: signature verification fails
-Alice: prompt user "Bob's key has changed. Re-pair?"
-User confirms → Alice → Bob: pair.v1.request { ... }
-               Bob → Alice: pair.v1.accept { ... }
-               Alice: update trust store
-               Connection is ready for business messages
+```json
+{
+  "type": "handshake.v1.reject",
+  "payload": {
+    "reason": "user_rejected"
+  }
+}
 ```
 
-**Scenario — initiator knows own key has rotated:**
+| Field  | Type   | Description |
+|--------|--------|-------------|
+| reason | string | Rejection reason |
+
+### Pairing Code
+
+For first-time pairing (Case 2) and key rotation (Case 3), both devices derive a short numeric code for the user to visually compare, preventing man-in-the-middle attacks where an attacker substitutes public keys.
+
+**Derivation:**
 
 ```
-Bob (rotated key) → Alice: pair.v1.request { deviceId, publicKey(new), name }
-Alice: detect known deviceId with changed publicKey, warn user
-User confirms → Alice → Bob: pair.v1.accept { ... }
-Both sides update trust store
-Connection is ready for business messages
+code = truncate(SHA-256(sort(publicKey_A, publicKey_B) + nonce_A + nonce_B), 6 digits)
+```
+
+- Inputs: both public keys (lexicographically sorted) + both nonces
+- Sorting ensures both sides compute the same value regardless of role
+- Truncated to 6 decimal digits for easy visual comparison
+
+**Example User experience:**
+
+```
+Alice's screen: "Pairing with Bob's Laptop. Confirm the other device shows: 847291"
+Bob's screen:   "Alice's Phone wants to pair. Confirm the other device shows: 847291. Accept?"
+```
+
+If a man-in-the-middle substitutes public keys, the two sides will compute different codes.
+
+Pairing code is NOT shown for Case 1 (known device with matching key) — signature verification alone is sufficient for previously paired devices.
+
+### Flow
+
+```
+Alice → Bob: handshake.v1.request { deviceId, publicKey, name, timestamp, nonce, signature }
+│
+Bob checks local trust store
+│
+├─ deviceId known + publicKey matches
+│   │
+│   ├─ Verify signature → Fail
+│   │   └─ Bob → Alice: handshake.v1.reject { reason: "signature_invalid" }
+│   │
+│   └─ Verify signature → Pass
+│       ├─ Bob → Alice: handshake.v1.exchange { ... signature }
+│       ├─ Alice verifies Bob's signature
+│       ├─ Bob → Alice: handshake.v1.accept { deviceId }
+│       └─ → Business messages
+│
+├─ deviceId unknown (first-time pairing)
+│   │
+│   ├─ Bob → Alice: handshake.v1.exchange { ... signature }
+│   ├─ Alice verifies Bob's signature
+│   ├─ Both sides compute and display pairing code
+│   │
+│   ├─ User accepts
+│   │   ├─ Bob → Alice: handshake.v1.accept { deviceId }
+│   │   ├─ Both sides store peer's deviceId + publicKey in trust store
+│   │   └─ → Business messages
+│   │
+│   └─ User rejects
+│       └─ Bob → Alice: handshake.v1.reject { reason: "user_rejected" }
+│
+└─ deviceId known + publicKey mismatch (key rotation)
+    │
+    ├─ Warn user about key change
+    ├─ Bob → Alice: handshake.v1.exchange { ... signature }
+    ├─ Alice verifies Bob's signature
+    ├─ Both sides compute and display pairing code
+    │
+    ├─ User accepts
+    │   ├─ Bob → Alice: handshake.v1.accept { deviceId }
+    │   ├─ Both sides update trust store
+    │   └─ → Business messages
+    │
+    └─ User rejects
+        └─ Bob → Alice: handshake.v1.reject { reason: "key_changed_rejected" }
 ```
 
 ## Keepalive
 
-After authentication completes (via either path), both sides maintain connection liveness using WebSocket Ping/Pong.
+After handshake completes, both sides maintain connection liveness using WebSocket Ping/Pong.
 
 - Each side sends one WebSocket `Ping` frame every 15 seconds
 - If 45 seconds pass without receiving any frame from the peer, treat the connection as dead and close it

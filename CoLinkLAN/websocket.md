@@ -42,7 +42,7 @@ Connection established
   │               → Pairing
   │               → Business messages (no hello needed)
   │
-  └─ Peer's deviceId is unknown OR own key has rotateds
+  └─ Peer's deviceId is unknown OR own key has rotated
         → Pairing
         → Business messages (no hello needed)
 ```
@@ -94,40 +94,41 @@ Pairing establishes mutual trust between two devices that have not previously ex
 
 | Type | Direction | Description |
 |------|-----------|-------------|
-| `pair.v1.request` | Initiator → Receiver | Request to pair |
-| `pair.v1.accept`  | Receiver → Initiator | Accept pairing (requires user confirmation) |
-| `pair.v1.reject`  | Receiver → Initiator | Reject pairing |
+| `pair.v1.request`  | Initiator → Receiver | Request to pair |
+| `pair.v1.exchange` | Receiver → Initiator | Share receiver's public key for mutual verification |
+| `pair.v1.accept`   | Receiver → Initiator | Accept pairing (requires user confirmation) |
+| `pair.v1.reject`   | Receiver → Initiator | Reject pairing |
 
-Challenge sub-protocol (Scheme 0: signature verification, optional):
+Challenge 0 sub-protocol (signature verification, optional, decided by implementation):
 
-| Type | Direction | Description |
-|------|-----------|-------------|
-| `pair.v1.challenge.0.v1.request`  | Receiver → Initiator | Send challenge to verify key ownership |
-| `pair.v1.challenge.0.v1.response` | Initiator → Receiver | Return signed challenge |
+| Type | Description |
+|-------------------|
+| `pair.v1.challenge.0.v1.request`  | Send challenge to verify key ownership |
+| `pair.v1.challenge.0.v1.response` | Return signed challenge |
 
-**Basic flow (without challenge):**
+**Flow:**
 
 ```
 Alice → Bob: pair.v1.request { deviceId, publicKey, name }
-Bob: prompt user "Device Alice (name) requests pairing"
-Bob → Alice: pair.v1.accept { deviceId, publicKey, name }   (user confirms)
-         or  pair.v1.reject { reason }                      (user rejects)
+Bob → Alice: pair.v1.exchange { deviceId, publicKey, name }
+
+[optional: Challenge 0] Bob → Alice: pair.v1.challenge.0.v1.request { challenge: <random-bytes> }
+[optional: Challenge 0] Alice → Bob: pair.v1.challenge.0.v1.response { response: sign(challenge, Alice_privateKey) }
+[optional: Challenge 0] Bob: verify response against publicKey from the request
+
+[optional: Challenge 0] Alice → Bob: pair.v1.challenge.0.v1.request { challenge: <random-bytes> }
+[optional: Challenge 0] Bob → Alice: pair.v1.challenge.0.v1.response { response: sign(challenge, Bob_privateKey) }
+[optional: Challenge 0] Alice: verify response against publicKey from the exchange
+
+Bob: prompt user for confirmation
+Bob → Alice: pair.v1.accept { deviceId }
+         or  pair.v1.reject { reason }
+
 Both sides store peer's deviceId + publicKey in local trust store
 Connection is ready for business messages
 ```
 
-**Challenge flow (Scheme 0: signature verification):**
-
-```
-Alice → Bob: pair.v1.request { deviceId, publicKey, name }
-Bob → Alice: pair.v1.challenge.0.v1.request { challenge: <random-bytes> }
-Alice → Bob: pair.v1.challenge.0.v1.response { response: sign(challenge, Alice_privateKey) }
-Bob: verify response against publicKey from the request
-Bob: prompt user for confirmation
-Bob → Alice: pair.v1.accept { deviceId, publicKey, name, challenge: <random-bytes> }
-Alice: verify that Bob signed the challenge in accept using Bob's publicKey
-Connection is ready for business messages
-```
+Steps marked `[optional: Challenge 0]` apply only when the implementation uses challenge verification (Scheme 0: signature verification).
 
 ### Key Rotation
 

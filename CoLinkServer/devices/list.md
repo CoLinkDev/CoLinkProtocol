@@ -25,7 +25,8 @@ Header: `Authorization: Bearer <token>`
         "type": "windows",
         "online": true,
         "lastSeen": "2026-05-23T10:30:00Z",
-        "publicKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A..."
+        "publicKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A...",
+        "publicKeyUpdatedAt": "2026-05-23T10:30:00Z"
       },
       {
         "deviceId": "770e8400-e29b-41d4-a716-446655440002",
@@ -33,7 +34,8 @@ Header: `Authorization: Bearer <token>`
         "type": "android",
         "online": false,
         "lastSeen": "2026-05-22T18:00:00Z",
-        "publicKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A..."
+        "publicKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A...",
+        "publicKeyUpdatedAt": "2026-05-22T18:00:00Z"
       }
     ]
   },

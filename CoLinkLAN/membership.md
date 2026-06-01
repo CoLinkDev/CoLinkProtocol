@@ -177,7 +177,7 @@ This prevents stale IPs from polluting membership state.
 
 New nodes join by sending a `ping` to any peer whose address was resolved via mDNS. The ping's gossip carries the new node's own entry: `{ deviceId, state: "alive", incarnation: <utcNowMillis> }`.
 
-The receiver responds with `ack`. Upon receiving the ack, the new node marks the peer as `alive` in its local membership table. This `alive` transition is what triggers upper-layer actions (WebSocket connection setup, etc.).
+The receiver responds with `ack`. Upon receiving the ack, the new node marks the peer as `alive` in its local membership table.
 
 Receivers that encounter an unknown `deviceId` transitioning to `alive` treat this as a **memberJoined** event.
 
@@ -194,16 +194,15 @@ When the node returns to foreground, it re-joins with a higher incarnation (same
 
 ### Relationship to WebSocket
 
-SWIM is the sole authority on membership state. WebSocket manages connection-level liveness.
+SWIM is the sole authority on membership state. Connection lifecycle (when to establish, when to tear down) is an implementation concern and not dictated by this specification.
 
 | Scenario                        | Action                                      |
 |---------------------------------|---------------------------------------------|
 | SWIM: dead/left, WS: connected  | Clean up WS connection                      |
-| SWIM: alive, WS: disconnected   | Reconnect WS only, membership unchanged     |
 | WS: active, SWIM ping: failing  | SWIM proceeds normally — WS liveness does not override SWIM |
 
 SWIM and WebSocket keepalive (see `websocket.md`) are orthogonal. WS activity is not used as alive evidence for membership decisions.
 
-#### Connection Direction
+#### Conflict Resolution
 
-When both peers reach `alive` state, the peer with the smaller `deviceId` (lexicographic comparison) initiates the WebSocket connection. The other peer only accepts incoming connections. This prevents duplicate connections from both sides connecting simultaneously.
+Either peer may initiate a WebSocket connection when it needs. If both peers initiate simultaneously and two connections are established, both sides detect the duplicate after handshake and resolve the conflict deterministically: the connection initiated by the peer with the smaller `deviceId` (lexicographic comparison) is kept, and the other is closed.

@@ -98,9 +98,17 @@ After a WebSocket connection is established, the initiator sends a `handshake.v1
 |--------|--------|-------------|
 | reason | string | Rejection reason |
 
+Well-known reasons (implementations may send other values; receivers should treat unrecognized reasons as a generic rejection):
+
+| Reason | Description |
+|--------|-------------|
+| `user_rejected` | User declined the pairing request |
+| `signature_invalid` | Signature verification failed |
+| `key_changed` | Peer's public key has changed since last trust — connection refused, trust revoked |
+
 ### Pairing Code
 
-For first-time pairing (Case 2) and key rotation (Case 3), both devices derive a short numeric code for the user to visually compare, preventing man-in-the-middle attacks where an attacker substitutes public keys.
+For first-time pairing (Case 2), both devices derive a short numeric code for the user to visually compare, preventing man-in-the-middle attacks where an attacker substitutes public keys.
 
 **Derivation:**
 
@@ -155,20 +163,10 @@ Bob checks local trust store
 │   └─ User rejects
 │       └─ Bob → Alice: handshake.v1.reject { reason: "user_rejected" }
 │
-└─ deviceId known + publicKey mismatch (key rotation)
+└─ deviceId known + publicKey mismatch (key changed)
     │
-    ├─ Warn user about key change
-    ├─ Bob → Alice: handshake.v1.exchange { ... signature }
-    ├─ Alice verifies Bob's signature
-    ├─ Both sides compute and display pairing code
-    │
-    ├─ User accepts
-    │   ├─ Bob → Alice: handshake.v1.accept { deviceId }
-    │   ├─ Both sides update trust store
-    │   └─ → Business messages
-    │
-    └─ User rejects
-        └─ Bob → Alice: handshake.v1.reject { reason: "key_changed_rejected" }
+    └─ Bob → Alice: handshake.v1.reject { reason: "key_changed" }
+      └─ Bob removes Alice from trust store (requires re-pairing)
 ```
 
 ## Business Messages

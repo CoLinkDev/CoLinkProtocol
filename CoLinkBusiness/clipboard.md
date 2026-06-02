@@ -36,7 +36,7 @@ Synchronize clipboard content between devices.
 
 ## Behavior
 
-- Push model: clipboard change → broadcast to all connected devices
+- Push model: clipboard change → `broadcast` message to all connected devices
 - Receiver writes to local clipboard silently
 - Skip content > 1MB
 

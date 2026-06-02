@@ -35,6 +35,7 @@ Address resolution using mDNS/DNS-SD. This layer is invisible to upper layers â€
 |----------|----------------|------------------|
 | deviceId | `660e8400-...` | Full device UUID |
 | version  | `1`            | Protocol version |
+| name     | `Alice's Phone`| Device display name |
 
 ### Behavior
 

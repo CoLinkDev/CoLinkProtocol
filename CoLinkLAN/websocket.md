@@ -64,7 +64,7 @@ After a WebSocket connection is established, the initiator sends a `handshake.v1
 | deviceId  | string | Sender's device ID |
 | publicKey | string | Sender's public key |
 | name      | string | Sender's device name |
-| timestamp | number | Current Unix milliseconds (reject if drift > 30s) |
+| timestamp | number | Current Unix milliseconds |
 | nonce     | string | Random string, ensures each handshake is unique |
 | signature | string | Sign `deviceId + timestamp + nonce` with sender's private key |
 

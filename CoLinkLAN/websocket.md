@@ -89,22 +89,22 @@ After a WebSocket connection is established, the initiator sends a `handshake.v1
 {
   "type": "handshake.v1.reject",
   "payload": {
-    "reason": "user_rejected"
+    "reason": "colink:handshake.user_rejected.v1"
   }
 }
 ```
 
 | Field  | Type   | Description |
 |--------|--------|-------------|
-| reason | string | Rejection reason |
+| reason | string | Rejection reason (see [Reason Format](../README.md#reason-format)) |
 
 Well-known reasons (implementations may send other values; receivers should treat unrecognized reasons as a generic rejection):
 
 | Reason | Description |
 |--------|-------------|
-| `user_rejected` | User declined the pairing request |
-| `signature_invalid` | Signature verification failed |
-| `key_changed` | Peer's public key has changed since last trust — connection refused, trust revoked |
+| `colink:handshake.user_rejected.v1` | User declined the pairing request |
+| `colink:handshake.signature_invalid.v1` | Signature verification failed |
+| `colink:handshake.key_changed.v1` | Peer's public key has changed since last trust — connection refused, trust revoked |
 
 ### Pairing Code
 
@@ -141,7 +141,7 @@ Bob checks local trust store
 ├─ deviceId known + publicKey matches
 │   │
 │   ├─ Verify signature → Fail
-│   │   └─ Bob → Alice: handshake.v1.reject { reason: "signature_invalid" }
+│   │   └─ Bob → Alice: handshake.v1.reject { reason: "colink:handshake.signature_invalid.v1" }
 │   │
 │   └─ Verify signature → Pass
 │       ├─ Bob → Alice: handshake.v1.exchange { ... signature }
@@ -161,11 +161,11 @@ Bob checks local trust store
 │   │   └─ → Business messages
 │   │
 │   └─ User rejects
-│       └─ Bob → Alice: handshake.v1.reject { reason: "user_rejected" }
+│       └─ Bob → Alice: handshake.v1.reject { reason: "colink:handshake.user_rejected.v1" }
 │
 └─ deviceId known + publicKey mismatch (key changed)
     │
-    └─ Bob → Alice: handshake.v1.reject { reason: "key_changed" }
+    └─ Bob → Alice: handshake.v1.reject { reason: "colink:handshake.key_changed.v1" }
       └─ Bob removes Alice from trust store (requires re-pairing)
 ```
 

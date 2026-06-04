@@ -43,7 +43,7 @@ Total header: 8 bytes.
 | 0x02  | ack        | receiver→sender  | nextExpectedIndex (all prior confirmed) | none                 |
 | 0x03  | finish     | sender→receiver  | total chunks sent                       | none                 |
 | 0x04  | retransmit | receiver→sender  | requested chunk index                   | none                 |
-| 0x05  | cancel     | either direction | 0 (unused)                              | optional UTF-8 reason|
+| 0x05  | cancel     | either direction | 0 (unused)                              | optional UTF-8 reason (see [Reason Format](../README.md#reason-format)) |
 
 `finish` signals that the sender has transmitted all chunks. It does NOT mean the transfer is complete — the receiver must still verify the checksum and send `file.v2.done` on the control plane.
 
@@ -100,10 +100,12 @@ After receiving `accept`, the sender determines the route independently based on
   "type": "file.v2.reject",
   "payload": {
     "sessionId": "uuid-v4",
-    "reason": "storage full"
+    "reason": "colink:transfer.storage_full.v1"
   }
 }
 ```
+
+The `reason` field follows [Reason Format](../README.md#reason-format).
 
 ### file.v2.cancel
 
@@ -114,7 +116,7 @@ Either side can cancel at any time:
   "type": "file.v2.cancel",
   "payload": {
     "sessionId": "uuid-v4",
-    "reason": "user cancelled"
+    "reason": "colink:transfer.user_cancelled.v1"
   }
 }
 ```
@@ -200,7 +202,7 @@ Checksum mismatch or other failure:
 ```json
 {
   "type": "file.v2.done",
-  "payload": { "sessionId": "uuid-v4", "success": false, "reason": "checksum mismatch" }
+  "payload": { "sessionId": "uuid-v4", "success": false, "reason": "colink:transfer.checksum_mismatch.v1" }
 }
 ```
 

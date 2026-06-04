@@ -45,3 +45,27 @@ Code `0` = success. Positive codes are module-specific (defined in each API doc)
 Notes:
 - Code `-1` is returned when no specific error code matches. Never expose internal details (stack trace, SQL) in the message.
 - Module-specific codes: `1xxx` = auth, `2xxx` = device. See individual endpoint docs.
+
+## Reason Format
+
+The `reason` field in protocol messages supports a structured format for machine-parseable reason codes.
+
+### Format
+
+```
+colink:{domain}.{code}.{version}
+```
+
+| Part       | Description                                            | Example        |
+|------------|--------------------------------------------------------|----------------|
+| `colink:`  | Fixed prefix, used to identify structured reason codes | —              |
+| `{domain}` | Protocol domain the reason belongs to                  | `handshake`, `transfer` |
+| `{code}`   | Specific reason identifier in snake_case               | `user_rejected`, `storage_full` |
+| `{version}`| Format version                                         | `v1`           |
+
+### Parsing Rules
+
+- If the `reason` string starts with `colink:` → structured reason code, parse and handle by semantics.
+- If the `reason` string does NOT start with `colink:` → plain text, display as-is to the user.
+- Receivers MUST check the `colink:` prefix before attempting to parse.
+- Unrecognized structured codes (valid prefix but unknown domain/code) should be treated as a generic failure.

@@ -16,6 +16,7 @@ A source device detects music playback and pushes track metadata, lyrics, and pl
 | `music.v1.lyric`    | source → receiver | Lyrics content for current track |
 | `music.v1.progress` | source → receiver | Playback progress update       |
 | `music.v1.alive`    | receiver → source | Receiver presence heartbeat    |
+| `music.v1.request`  | receiver → source | Request current full state      |
 
 ---
 
@@ -142,10 +143,25 @@ No payload fields required.
 
 - Receivers should send at a fixed interval (recommended: 5s)
 - Source should stop pushing data if no `alive` message is received from any receiver within a timeout period (recommended: 15s)
-- Source should resume pushing when a new `alive` message arrives, starting with a full state push (`track` + `lyric` + `progress`)
+- Source should resume pushing when a new `alive` message arrives
 
 ---
 
-## Behavior
+## music.v1.request
 
-- Receivers that join mid-session should receive the current track and lyric state (implementation-defined)
+Sent by a receiver to request the current full playback state from the source.
+
+```json
+{
+  "type": "music.v1.request",
+  "payload": {}
+}
+```
+
+No payload fields required.
+
+### Notes
+
+- Source should respond by immediately pushing three messages in order: `music.v1.track`, `music.v1.lyric`, and `music.v1.progress`
+- If no track is currently playing, source should respond with a `music.v1.track` message where `trackId` is `null`
+- Typical use case: receiver first connects or reconnects and needs to sync

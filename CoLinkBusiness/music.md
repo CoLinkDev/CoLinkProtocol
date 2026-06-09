@@ -32,6 +32,7 @@ Sent when the playing track changes or playback stops.
     "title": "Song Title",
     "artists": ["Artist A", "Artist B"],
     "album": "Album Name",
+    "source": "ncm",
     "coverUrl": "https://example.com/cover.jpg",
     "coverData": "iVBORw0KGgo...",
     "duration": 234500
@@ -45,6 +46,7 @@ Sent when the playing track changes or playback stops.
 | title     | string/null  | Track title                          |
 | artists   | string[]/null | Artist names                        |
 | album     | string/null  | Album name                           |
+| source    | string/null  | Player source identifier. Known values: `"ncm"`. |
 | coverUrl  | string/null  | Album cover image URL                |
 | coverData | string/null  | Base64 encoded cover image           |
 | duration  | number/null  | Track duration in milliseconds       |

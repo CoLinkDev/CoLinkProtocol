@@ -46,7 +46,7 @@ Sent when the playing track changes or playback stops.
 | title     | string/null  | Track title                          |
 | artists   | string[]/null | Artist names                        |
 | album     | string/null  | Album name                           |
-| source    | string/null  | Player source identifier. Known values: `"ncm"`. |
+| source    | string/null  | Player source identifier. Known values: `"ncm"`, `"qqmusic"`, `"applemusic"`, `"spotify"`, `"ytmusic"`, `"bilibili"`, `"tidal"`, `"deezer"`. |
 | coverUrl  | string/null  | Album cover image URL                |
 | coverData | string/null  | Base64 encoded cover image           |
 | duration  | number/null  | Track duration in milliseconds       |

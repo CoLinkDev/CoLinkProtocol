@@ -69,7 +69,7 @@ Request and response bodies are SWIM messages. No additional port or persistent 
 
 | Parameter           | Value   | Note                                            |
 |---------------------|---------|-------------------------------------------------|
-| protocolPeriod      | 1000ms  | Next round starts only after previous completes |
+| protocolPeriod      | 3000ms  | Next round starts only after previous completes |
 | directPingTimeout   | 500ms   | Timeout for direct ping HTTP call               |
 | indirectPingTimeout | 500ms   | Timeout for intermediary's ping to target       |
 | pingReqFanout       | 2       | min(configured, members - 2)                    |
@@ -88,6 +88,7 @@ All messages use the standard `type` + `payload` envelope:
   "payload": {
     "seq": 42,
     "from": "deviceId",
+    "incarnation": 1748352000000,
     "gossip": [
       { "deviceId": "...", "state": "alive | suspect | dead | left", "incarnation": 1748352000000 }
     ]
@@ -105,6 +106,7 @@ Types: `swim.ping`, `swim.ack`, `swim.ping-req`.
   "payload": {
     "seq": 42,
     "from": "deviceId",
+    "incarnation": 1748352000000,
     "target": "deviceId-B",
     "gossip": []
   }
@@ -153,7 +155,7 @@ Incarnation is the node's own UTC millisecond timestamp at the moment it produce
 
 **Suspect/dead propagation:** When node A suspects node B, A gossips `{deviceId: "B", state: "suspect", incarnation: <B's last known incarnation>}`. A does not generate a new incarnation for B — it reuses whatever value B last declared.
 
-**Tombstone:** Nodes in `dead` or `left` state are retained in the membership table for at least 5 minutes. During this period, gossip with lower or equal incarnation for that node is rejected. This prevents stale gossip from resurrecting removed nodes.
+**Tombstone:** Nodes in `dead` or `left` state are retained in the membership table for at least 5 minutes.
 
 ### Gossip
 

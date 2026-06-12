@@ -69,11 +69,12 @@ Request and response bodies are SWIM messages. No additional port or persistent 
 
 | Parameter           | Value   | Note                                            |
 |---------------------|---------|-------------------------------------------------|
-| protocolPeriod      | 3000ms  | Next round starts only after previous completes |
-| directPingTimeout   | 500ms   | Timeout for direct ping HTTP call               |
-| indirectPingTimeout | 500ms   | Timeout for intermediary's ping to target       |
+| protocolPeriod      | 5000ms  | Next round starts only after previous completes |
+| directPingTimeout   | 1000ms  | Timeout for direct ping HTTP call               |
+| indirectPingTimeout | 2000ms  | Timeout for intermediary's ping to target       |
 | pingReqFanout       | 2       | min(configured, members - 2)                    |
-| suspectTimeout      | 5000ms  | Time before suspect becomes dead                |
+| suspectMisses       | 2       | Consecutive full probe misses before marking suspect |
+| suspectTimeout      | 3000ms  | Time before suspect becomes dead                |
 | maxGossipPerMsg     | 10      | Older entries displaced by newer ones           |
 
 These are recommended starting values. Implementations may adjust based on actual situation.
@@ -115,7 +116,7 @@ Types: `swim.ping`, `swim.ack`, `swim.ping-req`.
 
 ### Flow
 
-- `ping`: POST to target. Target responds with `ack` in the HTTP response body.
+- `ping`: POST to target. Target responds with `ack` in the HTTP response body. Both `ping` and `ack` carry a `gossip` array.
 - `ping-req`: POST to intermediary with `target` set. Intermediary POSTs a `ping` to target, waits for target's `ack`, then returns **target's original ack** (preserving target's `from` and `seq`) as the HTTP response to the caller.
 - Probe round: one round = direct ping attempt + (on timeout) indirect ping-req via `pingReqFanout` intermediaries. Blocking — next round does not start until current round resolves.
 
@@ -160,6 +161,8 @@ Incarnation is the node's own UTC millisecond timestamp at the moment it produce
 ### Gossip
 
 Gossip propagates state changes to nodes that did not directly observe them. It is not the only mechanism for confirming liveness — direct observation (above) is equally authoritative.
+
+Gossip travels in both directions: the `ping` request carries the sender's gossip, and the `ack` response carries the receiver's gossip. Every successful probe round is therefore a two-way gossip exchange with no additional round-trip cost.
 
 #### Priority
 

@@ -118,7 +118,8 @@ Types: `swim.ping`, `swim.ack`, `swim.ping-req`.
 
 - `ping`: POST to target. Target responds with `ack` in the HTTP response body. Both `ping` and `ack` carry a `gossip` array.
 - `ping-req`: POST to intermediary with `target` set. Intermediary POSTs a `ping` to target, waits for target's `ack`, then returns **target's original ack** (preserving target's `from` and `seq`) as the HTTP response to the caller.
-- Probe round: one round = direct ping attempt + (on timeout) indirect ping-req via `pingReqFanout` intermediaries. Blocking — next round does not start until current round resolves.
+- Probe round: one round = direct ping attempt + (on timeout) concurrent indirect ping-req requests to up to `pingReqFanout` intermediaries (the first successful target ack wins). Blocking — next round does not start until current round resolves.
+- Probe targets are selected randomly; the specific scheme is implementation-defined. A recommended approach is a shuffled deck: shuffle candidates into a queue, dequeue one per round, and re-shuffle when the candidate set changes or all candidates have been probed, to avoid long-tail latency where some peers go unprobed for many rounds.
 
 ### Direct Observation
 

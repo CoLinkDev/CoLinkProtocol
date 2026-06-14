@@ -35,13 +35,13 @@ Header: `Authorization: Bearer <token>`
   "code": 0,
   "data": {
     "deviceId": "660e8400-e29b-41d4-a716-446655440001",
-    "deviceSecret": "a1b2c3d4e5f6..."
+    "deviceSecret": ""
   },
   "message": "ok"
 }
 ```
 
-`deviceId` is echoed back from the client-submitted value. `deviceSecret` is used for WebSocket authentication. Store securely on device.
+`deviceId` is echoed back from the client-submitted value. `deviceSecret` is deprecated and always returns an empty string — it has no functional purpose and will be removed in a future protocol version.
 
 ## Errors
 

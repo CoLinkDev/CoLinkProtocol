@@ -54,7 +54,8 @@ After a WebSocket connection is established, the initiator sends a `handshake.v1
     "name": "Alice's Phone",
     "timestamp": 1716451200000,
     "nonce": "random-string-32chars",
-    "signature": "base64(sign(deviceId + timestamp + nonce, privateKey))"
+    "signature": "base64(sign(deviceId + timestamp + nonce, privateKey))",
+    "hasTrust": true
   }
 }
 ```
@@ -67,6 +68,7 @@ After a WebSocket connection is established, the initiator sends a `handshake.v1
 | timestamp | number | Current Unix milliseconds |
 | nonce     | string | Random string, ensures each handshake is unique |
 | signature | string | Sign `deviceId + timestamp + nonce` with sender's private key |
+| hasTrust  | boolean | Whether the sender already trusts the receiver (has a valid trust record). Defaults to `true` if absent (backward compatibility). Does NOT participate in signature computation. |
 
 **handshake.v1.accept:**
 
@@ -129,12 +131,12 @@ Bob's screen:   "Alice's Phone wants to pair. Confirm the other device shows: 84
 
 If a man-in-the-middle substitutes public keys, the two sides will compute different codes.
 
-Pairing code is NOT shown for Case 1 (known device with matching key) — signature verification alone is sufficient for previously paired devices.
+Pairing code is NOT shown when both sides declare `hasTrust: true` (mutual trust) — signature verification alone is sufficient for previously paired devices. If either side sends `hasTrust: false`, both sides MUST display the pairing code and require user confirmation, even if one side has an existing trust record for the other.
 
 ### Flow
 
 ```
-Alice → Bob: handshake.v1.request { deviceId, publicKey, name, timestamp, nonce, signature }
+Alice → Bob: handshake.v1.request { deviceId, publicKey, name, timestamp, nonce, signature, hasTrust }
 │
 Bob checks local trust store
 │
@@ -144,14 +146,29 @@ Bob checks local trust store
 │   │   └─ Bob → Alice: handshake.v1.reject { reason: "colink:handshake.signature_invalid.v1" }
 │   │
 │   └─ Verify signature → Pass
-│       ├─ Bob → Alice: handshake.v1.exchange { ... signature }
-│       ├─ Alice verifies Bob's signature
-│       ├─ Bob → Alice: handshake.v1.accept { deviceId }
-│       └─ → Business messages
+│       │
+│       ├─ Bob trusts Alice AND Alice.hasTrust == true (mutual trust → fast path)
+│       │   ├─ Bob → Alice: handshake.v1.exchange { ..., hasTrust: true }
+│       │   ├─ Alice verifies Bob's signature
+│       │   ├─ Bob → Alice: handshake.v1.accept { deviceId }
+│       │   └─ → Business messages
+│       │
+│       └─ Bob does NOT trust Alice OR Alice.hasTrust == false (trust not mutual → pairing required)
+│           ├─ Bob → Alice: handshake.v1.exchange { ..., hasTrust: <Bob's actual trust state> }
+│           ├─ Alice verifies Bob's signature
+│           ├─ Both sides compute and display pairing code
+│           │
+│           ├─ User accepts
+│           │   ├─ Bob → Alice: handshake.v1.accept { deviceId }
+│           │   ├─ Both sides store peer's deviceId + publicKey in trust store
+│           │   └─ → Business messages
+│           │
+│           └─ User rejects
+│               └─ Bob → Alice: handshake.v1.reject { reason: "colink:handshake.user_rejected.v1" }
 │
 ├─ deviceId unknown (first-time pairing)
 │   │
-│   ├─ Bob → Alice: handshake.v1.exchange { ... signature }
+│   ├─ Bob → Alice: handshake.v1.exchange { ..., hasTrust: false }
 │   ├─ Alice verifies Bob's signature
 │   ├─ Both sides compute and display pairing code
 │   │
@@ -168,6 +185,12 @@ Bob checks local trust store
     └─ Bob → Alice: handshake.v1.reject { reason: "colink:handshake.key_changed.v1" }
       └─ Bob removes Alice from trust store (requires re-pairing)
 ```
+
+**Initiator (Alice) dialog decision after receiving `exchange`:**
+
+- If Alice's own `hasTrust == false` → show pairing dialog (Alice already knows pairing is needed)
+- If Alice's own `hasTrust == true` BUT Bob's `hasTrust == false` → show pairing dialog
+- If both `hasTrust == true` → fast path, no dialog
 
 ## Business Messages
 

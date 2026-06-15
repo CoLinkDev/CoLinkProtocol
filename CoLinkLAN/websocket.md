@@ -342,11 +342,18 @@ Both devices derive a short numeric code for the user to visually compare.
 **Derivation:**
 
 ```
-code = truncate(SHA-256(sort(publicKey_A, publicKey_B) + nonce_A + nonce_B), 6 digits)
+canonical = "domain=colink-lan-pairing-code\n"
+          + "publicKeyA=<lexicographically smaller public key>\n"
+          + "publicKeyB=<lexicographically larger public key>\n"
+          + "nonceA=<pairing.v1.request nonce>\n"
+          + "nonceB=<pairing.v1.exchange nonce>"
+
+code = truncate(SHA-256(canonical), 6 digits)
 ```
 
-- Inputs: both public keys (lexicographically sorted) + both nonces
-- Sorting ensures both sides compute the same value regardless of role
+- Inputs: both public keys (lexicographically sorted) + both nonces encoded as the canonical string above
+- Public key sorting ensures both sides compute the same value regardless of role
+- Nonces are not sorted: `nonceA` is the `pairing.v1.request` nonce, `nonceB` is the `pairing.v1.exchange` nonce
 - Truncated to 6 decimal digits for easy visual comparison
 
 **Example user experience:**

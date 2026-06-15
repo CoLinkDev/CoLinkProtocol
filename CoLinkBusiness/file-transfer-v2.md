@@ -100,12 +100,26 @@ After receiving `accept`, the sender determines the route independently based on
   "type": "file.v2.reject",
   "payload": {
     "sessionId": "uuid-v4",
-    "reason": "colink:transfer.storage_full.v1"
+    "reason": "colink:transfer.storage_full.v1",
+    "message": "Not enough storage space on receiver",
+    "details": { "available": 1048576, "required": 5242880 }
   }
 }
 ```
 
-The `reason` field follows [Reason Format](../README.md#reason-format).
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| sessionId | string | Yes | Session ID from offer |
+| reason | string | Yes | Rejection reason |
+| message | string | Yes | Human-readable description for logging/debugging |
+| details | object | No | Extensible structured metadata. Receivers MUST ignore unknown keys |
+
+Well-known reasons:
+
+| Reason | Description |
+|--------|-------------|
+| `colink:transfer.storage_full.v1` | Receiver storage space insufficient |
+| `colink:transfer.user_rejected.v1` | User rejected the file |
 
 ### file.v2.cancel
 
@@ -116,10 +130,24 @@ Either side can cancel at any time:
   "type": "file.v2.cancel",
   "payload": {
     "sessionId": "uuid-v4",
-    "reason": "colink:transfer.user_cancelled.v1"
+    "reason": "colink:transfer.user_cancelled.v1",
+    "message": "User cancelled the transfer"
   }
 }
 ```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| sessionId | string | Yes | Session ID from offer |
+| reason | string | Yes | Cancellation reason |
+| message | string | Yes | Human-readable description for logging/debugging |
+| details | object | No | Extensible structured metadata. Receivers MUST ignore unknown keys |
+
+Well-known reasons:
+
+| Reason | Description |
+|--------|-------------|
+| `colink:transfer.user_cancelled.v1` | User cancelled the transfer |
 
 ### file.v2.ready
 
@@ -190,6 +218,8 @@ Sent by receiver when a gap persists beyond the retransmit timeout:
 
 Sent by receiver on the **control plane (main WebSocket)** after all chunks are received and checksum is verified. This is the single authoritative completion signal.
 
+Success:
+
 ```json
 {
   "type": "file.v2.done",
@@ -197,14 +227,34 @@ Sent by receiver on the **control plane (main WebSocket)** after all chunks are 
 }
 ```
 
-Checksum mismatch or other failure:
+Failure:
 
 ```json
 {
   "type": "file.v2.done",
-  "payload": { "sessionId": "uuid-v4", "success": false, "reason": "colink:transfer.checksum_mismatch.v1" }
+  "payload": {
+    "sessionId": "uuid-v4",
+    "success": false,
+    "reason": "colink:transfer.checksum_mismatch.v1",
+    "message": "File checksum verification failed",
+    "details": { "expected": "blake3:abc123...", "actual": "blake3:def456..." }
+  }
 }
 ```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| sessionId | string | Yes | Session ID from offer |
+| success | boolean | Yes | Whether the transfer completed successfully |
+| reason | string | When `success: false` | Failure reason |
+| message | string | When `success: false` | Human-readable description for logging/debugging |
+| details | object | No | Extensible structured metadata. Receivers MUST ignore unknown keys |
+
+Well-known reasons:
+
+| Reason | Description |
+|--------|-------------|
+| `colink:transfer.checksum_mismatch.v1` | File checksum verification failed |
 
 After `file.v2.done` is sent, the data connection (if any) is closed and the path is deregistered.
 

@@ -176,23 +176,26 @@ No additional fields. Indicates that the sender has successfully verified the pe
 {
   "type": "auth.v1.reject",
   "payload": {
-    "reason": "colink:auth.unknown_device.v1"
+    "reason": "colink:auth.unknown_device.v1",
+    "message": "No trust record for this device"
   },
   ...
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| reason | string | Rejection reason (see [Reason Format](../README.md#reason-format)) |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| reason | string | Yes | Rejection reason |
+| message | string | Yes | Human-readable description for logging/debugging |
+| details | object | No | Extensible structured metadata. Receivers MUST ignore unknown keys |
 
-Well-known reasons (implementations may send other values; receivers should treat unrecognized reasons as a generic rejection):
+Well-known reasons:
 
 | Reason | Description |
 |--------|-------------|
-| `colink:auth.unknown_device.v1` | Receiver has no trust record for this device — initiator should fall back to `pairing.v1` |
+| `colink:auth.unknown_device.v1` | No trust record for this device — initiator should fall back to `pairing.v1` |
 | `colink:auth.signature_invalid.v1` | Signature verification failed |
-| `colink:auth.key_changed.v1` | Peer's public key differs from stored record — trust revoked |
+| `colink:auth.key_changed.v1` | Public key differs from stored record — trust revoked |
 
 ### Flow
 
@@ -308,15 +311,18 @@ No additional fields. Acknowledges that the initiator has also stored the trust 
 {
   "type": "pairing.v1.reject",
   "payload": {
-    "reason": "colink:pairing.user_rejected.v1"
+    "reason": "colink:pairing.user_rejected.v1",
+    "message": "User declined the pairing request"
   },
   ...
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| reason | string | Rejection reason (see [Reason Format](../README.md#reason-format)) |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| reason | string | Yes | Rejection reason |
+| message | string | Yes | Human-readable description for logging/debugging |
+| details | object | No | Extensible structured metadata. Receivers MUST ignore unknown keys |
 
 Well-known reasons:
 
@@ -324,6 +330,7 @@ Well-known reasons:
 |--------|-------------|
 | `colink:pairing.user_rejected.v1` | User declined the pairing request |
 | `colink:pairing.timeout.v1` | User did not respond within the allowed time |
+| `colink:pairing.code_mismatch.v1` | Pairing code does not match |
 
 ### Pairing Code
 

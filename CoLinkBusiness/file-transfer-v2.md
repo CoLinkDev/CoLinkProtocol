@@ -120,6 +120,7 @@ Well-known reasons:
 |--------|-------------|
 | `colink:transfer.storage_full.v1` | Receiver storage space insufficient |
 | `colink:transfer.user_rejected.v1` | User rejected the file |
+| `colink:transfer.generic.v1` | Generic transfer failure not covered by a specific reason |
 
 ### file.v2.cancel
 
@@ -148,6 +149,7 @@ Well-known reasons:
 | Reason | Description |
 |--------|-------------|
 | `colink:transfer.user_cancelled.v1` | User cancelled the transfer |
+| `colink:transfer.generic.v1` | Generic transfer failure not covered by a specific reason |
 
 ### file.v2.ready
 
@@ -255,6 +257,7 @@ Well-known reasons:
 | Reason | Description |
 |--------|-------------|
 | `colink:transfer.checksum_mismatch.v1` | File checksum verification failed |
+| `colink:transfer.generic.v1` | Generic transfer failure not covered by a specific reason |
 
 After `file.v2.done` is sent, the data connection (if any) is closed and the path is deregistered.
 

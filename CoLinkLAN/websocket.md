@@ -8,109 +8,326 @@ LAN peer-to-peer communication is carried over a single WebSocket connection.
 ws://<localIp>:<localPort>/peer
 ```
 
-Each device runs a local WebSocket server (default port 27777). The party that initiates the WebSocket connection sends the first protocol message.
+Each device runs a local WebSocket server (default port 27777).
 
-## Event Format
+Protocol-level errors (unknown message type, unexpected message for current state, timing violations) MUST NOT cause the transport connection to close. The receiver should ignore, reject, or buffer the message within its local state machine. Connection closure is only triggered by: transport-layer disconnect, explicit close, keepalive timeout, or local resource policy.
 
-All messages use a unified envelope:
+## Message Format
+
+Two formats coexist on the wire:
+
+### Bare Format (protocol.hello only)
 
 ```json
 {
-  "type": "<type>",
-  "payload": { ... }
+  "type": "protocol.hello",
+  "payload": { "..." }
 }
 ```
 
+`protocol.hello` is the only message that uses this format. It has no version suffix and its structure may only be extended by appending new fields.
+
+### Standard Envelope (all post-hello messages)
+
+```json
+{
+  "id": "01902a3b-4c5d-7e8f-9a0b-1c2d3e4f5a6b",
+  "type": "auth.v1.challenge",
+  "from": "660e8400-...",
+  "to": "770f9500-...",
+  "seq": 1,
+  "timestamp": 1718400000000,
+  "correlationId": null,
+  "payload": { "..." }
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| id | string | Yes | UUIDv7 — globally unique, time-ordered |
+| type | string | Yes | Namespaced message type |
+| from | string | Yes | Sender's deviceId |
+| to | string | Yes | Receiver's deviceId |
+| seq | number | Yes | Per-connection, per-direction monotonically increasing counter. Starts at 1 from the first envelope message after hello completes |
+| timestamp | number | Yes | Unix milliseconds when the message was created (sender's local clock) |
+| correlationId | string? | No | Set to the `id` of the originating message when this is a response |
+| payload | object | Yes | Domain-specific data |
+
+**Rules:**
+
+- `seq` is per-connection, per-direction. Each side maintains its own counter.
+- A gap in `seq` indicates message loss.
+- `timestamp` is the sender's local clock.
+- Before authentication completes, `from` is merely a claimed identity. The receiver may use it to look up a candidate trust record, but MUST verify it through `auth.v1` signature verification or `pairing.v1` code confirmation.
+- `to` MUST equal the local deviceId. A receiver MUST reject any message where `to` does not match itself.
+
 Type namespaces:
 
-| Namespace   | Purpose |
-|-------------|---------|
-| `handshake` | Connection handshake (identity verification + pairing) |
-| `business`  | Encrypted business message transport |
+| Namespace | Purpose |
+|-----------|---------|
+| `protocol` | Capability negotiation (bare format, no version suffix) |
+| `auth` | Connection authentication for previously paired devices |
+| `pairing` | First-time trust establishment |
+| `business` | Encrypted business message transport |
 
-## Handshake
+## Capability Negotiation (protocol.hello)
 
-After a WebSocket connection is established, the initiator sends a `handshake.v1.request`. The receiver determines how to proceed based on local trust state.
+After a WebSocket connection is established, both sides simultaneously send a `protocol.hello` message.
+
+```json
+{
+  "type": "protocol.hello",
+  "payload": {
+    "deviceId": "660e8400-...",
+    "capabilities": ["auth.v1", "pairing.v1", "business.v1"],
+    "extensions": {}
+  }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| deviceId | string | Sender's device ID |
+| capabilities | string[] | Supported signaling-layer capabilities, ordered by preference |
+| extensions | object | Optional extension parameters. Receivers MUST ignore unknown keys |
+
+### Rules
+
+1. `protocol.hello` is the **only** message without a version suffix. Its structure is append-only and permanent.
+2. Receivers MUST ignore unknown fields in `payload`.
+3. Receivers MUST ignore unrecognized strings in `capabilities`.
+4. Future evolution: add new fields to `payload` or new capability strings. Never remove or modify existing ones.
+5. Both sides send hello simultaneously after WebSocket connection is established.
+6. After hello exchange completes, both sides compute the capability intersection by exact string matching. Only capability strings present in both hello messages are considered supported for this connection.
+7. `deviceId` is a claimed identity before authentication completes. It MUST NOT be treated as an authenticated identity before authentication completes.
+
+## Authentication (auth.v1)
+
+Authentication is used when two previously paired devices reconnect. Both sides verify each other's identity through challenge-response signatures using their stored key pairs.
 
 ### Event Types
 
 | Type | Direction | Description |
 |------|-----------|-------------|
-| `handshake.v1.request`  | Initiator → Receiver | Initiate handshake with identity + signature |
-| `handshake.v1.exchange` | Receiver → Initiator | Return receiver's identity + signature |
-| `handshake.v1.accept`   | Receiver → Initiator | Handshake complete |
-| `handshake.v1.reject`   | Receiver → Initiator | Reject connection |
+| `auth.v1.challenge` | Both (initiator first) | Send a random nonce for the peer to sign |
+| `auth.v1.response` | Both (initiator first) | Return signature over the peer's nonce |
+| `auth.v1.verified` | Both (receiver first) | Signature verified, authentication complete |
+| `auth.v1.reject` | Either → Either | Signature invalid, key revoked, or device unknown |
 
 ### Message Definitions
 
-**handshake.v1.request / handshake.v1.exchange:**
+**auth.v1.challenge:**
 
 ```json
 {
-  "type": "handshake.v1.request",
+  "type": "auth.v1.challenge",
+  "timestamp": 1718400000000,
   "payload": {
-    "deviceId": "660e8400-...",
-    "publicKey": "base64(publicKey)",
-    "name": "Alice's Phone",
-    "timestamp": 1716451200000,
-    "nonce": "random-string-32chars",
-    "signature": "base64(sign(deviceId + timestamp + nonce, privateKey))",
-    "hasTrust": true
-  }
+    "nonce": "random-string-32chars"
+  },
+  ...
 }
 ```
 
-| Field     | Type   | Description |
-|-----------|--------|-------------|
-| deviceId  | string | Sender's device ID |
-| publicKey | string | Sender's public key |
-| name      | string | Sender's device name |
-| timestamp | number | Current Unix milliseconds |
-| nonce     | string | Random string, ensures each handshake is unique |
-| signature | string | Sign `deviceId + timestamp + nonce` with sender's private key |
-| hasTrust  | boolean | Whether the sender already trusts the receiver (has a valid trust record). Defaults to `true` if absent (backward compatibility). Does NOT participate in signature computation. |
+| Field | Type | Description |
+|-------|------|-------------|
+| nonce | string | Random string, used as the challenge for the peer to sign |
 
-**handshake.v1.accept:**
+**auth.v1.response:**
 
 ```json
 {
-  "type": "handshake.v1.accept",
+  "type": "auth.v1.response",
+  "timestamp": 1718400000000,
   "payload": {
-    "deviceId": "770f9500-..."
-  }
+    "signature": "base64(...)"
+  },
+  ...
 }
 ```
 
-| Field    | Type   | Description |
-|----------|--------|-------------|
-| deviceId | string | Receiver's device ID |
+| Field | Type | Description |
+|-------|------|-------------|
+| signature | string | Signature over the canonical string (see below) using sender's private key |
 
-**handshake.v1.reject:**
+Canonical signature input:
+
+```
+from=<envelope.from>\ntimestamp=<envelope.timestamp>\nnonce=<peer_nonce>
+```
+
+Where `peer_nonce` is the nonce received in the peer's `auth.v1.challenge`.
+
+**auth.v1.verified:**
 
 ```json
 {
-  "type": "handshake.v1.reject",
-  "payload": {
-    "reason": "colink:handshake.user_rejected.v1"
-  }
+  "type": "auth.v1.verified",
+  "payload": {},
+  ...
 }
 ```
 
-| Field  | Type   | Description |
-|--------|--------|-------------|
+No additional fields. Indicates that the sender has successfully verified the peer's signature.
+
+**auth.v1.reject:**
+
+```json
+{
+  "type": "auth.v1.reject",
+  "payload": {
+    "reason": "colink:auth.unknown_device.v1"
+  },
+  ...
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
 | reason | string | Rejection reason (see [Reason Format](../README.md#reason-format)) |
 
 Well-known reasons (implementations may send other values; receivers should treat unrecognized reasons as a generic rejection):
 
 | Reason | Description |
 |--------|-------------|
-| `colink:handshake.user_rejected.v1` | User declined the pairing request |
-| `colink:handshake.signature_invalid.v1` | Signature verification failed |
-| `colink:handshake.key_changed.v1` | Peer's public key has changed since last trust — connection refused, trust revoked |
+| `colink:auth.unknown_device.v1` | Receiver has no trust record for this device — initiator should fall back to `pairing.v1` |
+| `colink:auth.signature_invalid.v1` | Signature verification failed |
+| `colink:auth.key_changed.v1` | Peer's public key differs from stored record — trust revoked |
+
+### Flow
+
+```
+Initiator                                      Receiver
+  │                                              │
+  │─── auth.v1.challenge ─────────────────────→  │  { nonce_a }
+  │←── auth.v1.challenge ──────────────────────  │  { nonce_b }
+  │                                              │
+  │─── auth.v1.response ──────────────────────→  │  { signature }
+  │←── auth.v1.response ───────────────────────  │  { signature }
+  │                                              │
+  │  Both sides verify the peer's signature      │
+  │                                              │
+  │←── auth.v1.verified ───────────────────────  │
+  │─── auth.v1.verified ──────────────────────→  │
+  │                                              │
+  │        ═══ Authenticated, session ready ═══  │
+```
+
+### Rules
+
+1. The initiator sends `auth.v1.challenge` first. The receiver sends its own challenge upon receiving the initiator's.
+2. Upon receiving the peer's challenge, each side sends `auth.v1.response` (initiator first).
+3. To verify a response, the receiver looks up the public key in its local trust store using the `from` field of the envelope.
+4. If verification passes, send `auth.v1.verified`. If it fails, send `auth.v1.reject`.
+5. Upon receiving `auth.v1.reject` with reason `colink:auth.unknown_device.v1`, the initiator may fall back to `pairing.v1`.
+6. Upon receiving `auth.v1.reject` with reason `colink:auth.key_changed.v1`, the receiver removes the peer from its trust store.
+
+## Pairing (pairing.v1)
+
+Pairing establishes trust between two devices that have never communicated before. It uses a short numeric code displayed on both screens for the user to visually confirm, preventing man-in-the-middle attacks.
+
+### Event Types
+
+| Type | Direction | Description |
+|------|-----------|-------------|
+| `pairing.v1.request` | Initiator → Receiver | Propose pairing with identity information |
+| `pairing.v1.exchange` | Receiver → Initiator | Respond with receiver's identity information |
+| `pairing.v1.confirm` | Receiver → Initiator | User confirmed pairing code match |
+| `pairing.v1.complete` | Initiator → Receiver | Acknowledge confirmation, both sides store trust |
+| `pairing.v1.reject` | Either → Either | User rejected or timeout |
+
+### Message Definitions
+
+**pairing.v1.request:**
+
+```json
+{
+  "type": "pairing.v1.request",
+  "payload": {
+    "publicKey": "base64(publicKey)",
+    "name": "Alice's Phone",
+    "nonce": "random-string-32chars"
+  },
+  ...
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| publicKey | string | Sender's public key (Ed25519) |
+| name | string | Sender's device display name |
+| nonce | string | Random string, participates in pairing code derivation |
+
+**pairing.v1.exchange:**
+
+```json
+{
+  "type": "pairing.v1.exchange",
+  "payload": {
+    "publicKey": "base64(publicKey)",
+    "name": "Bob's Laptop",
+    "nonce": "random-string-32chars"
+  },
+  ...
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| publicKey | string | Receiver's public key (Ed25519) |
+| name | string | Receiver's device display name |
+| nonce | string | Random string, participates in pairing code derivation |
+
+**pairing.v1.confirm:**
+
+```json
+{
+  "type": "pairing.v1.confirm",
+  "payload": {},
+  ...
+}
+```
+
+No additional fields. Indicates the receiver's user has verified the pairing code and accepted the pairing.
+
+**pairing.v1.complete:**
+
+```json
+{
+  "type": "pairing.v1.complete",
+  "payload": {},
+  ...
+}
+```
+
+No additional fields. Acknowledges that the initiator has also stored the trust record.
+
+**pairing.v1.reject:**
+
+```json
+{
+  "type": "pairing.v1.reject",
+  "payload": {
+    "reason": "colink:pairing.user_rejected.v1"
+  },
+  ...
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| reason | string | Rejection reason (see [Reason Format](../README.md#reason-format)) |
+
+Well-known reasons:
+
+| Reason | Description |
+|--------|-------------|
+| `colink:pairing.user_rejected.v1` | User declined the pairing request |
+| `colink:pairing.timeout.v1` | User did not respond within the allowed time |
 
 ### Pairing Code
 
-For first-time pairing (Case 2), both devices derive a short numeric code for the user to visually compare, preventing man-in-the-middle attacks where an attacker substitutes public keys.
+Both devices derive a short numeric code for the user to visually compare.
 
 **Derivation:**
 
@@ -122,7 +339,7 @@ code = truncate(SHA-256(sort(publicKey_A, publicKey_B) + nonce_A + nonce_B), 6 d
 - Sorting ensures both sides compute the same value regardless of role
 - Truncated to 6 decimal digits for easy visual comparison
 
-**Example User experience:**
+**Example user experience:**
 
 ```
 Alice's screen: "Pairing with Bob's Laptop. Confirm the other device shows: 847291"
@@ -131,76 +348,46 @@ Bob's screen:   "Alice's Phone wants to pair. Confirm the other device shows: 84
 
 If a man-in-the-middle substitutes public keys, the two sides will compute different codes.
 
-Pairing code is NOT shown when both sides declare `hasTrust: true` (mutual trust) — signature verification alone is sufficient for previously paired devices. If either side sends `hasTrust: false`, both sides MUST display the pairing code and require user confirmation, even if one side has an existing trust record for the other.
-
 ### Flow
 
 ```
-Alice → Bob: handshake.v1.request { deviceId, publicKey, name, timestamp, nonce, signature, hasTrust }
-│
-Bob checks local trust store
-│
-├─ deviceId known + publicKey matches
-│   │
-│   ├─ Verify signature → Fail
-│   │   └─ Bob → Alice: handshake.v1.reject { reason: "colink:handshake.signature_invalid.v1" }
-│   │
-│   └─ Verify signature → Pass
-│       │
-│       ├─ Bob trusts Alice AND Alice.hasTrust == true (mutual trust → fast path)
-│       │   ├─ Bob → Alice: handshake.v1.exchange { ..., hasTrust: true }
-│       │   ├─ Alice verifies Bob's signature
-│       │   ├─ Bob → Alice: handshake.v1.accept { deviceId }
-│       │   └─ → Business messages
-│       │
-│       └─ Bob does NOT trust Alice OR Alice.hasTrust == false (trust not mutual → pairing required)
-│           ├─ Bob → Alice: handshake.v1.exchange { ..., hasTrust: <Bob's actual trust state> }
-│           ├─ Alice verifies Bob's signature
-│           ├─ Both sides compute and display pairing code
-│           │
-│           ├─ User accepts
-│           │   ├─ Bob → Alice: handshake.v1.accept { deviceId }
-│           │   ├─ Both sides store peer's deviceId + publicKey in trust store
-│           │   └─ → Business messages
-│           │
-│           └─ User rejects
-│               └─ Bob → Alice: handshake.v1.reject { reason: "colink:handshake.user_rejected.v1" }
-│
-├─ deviceId unknown (first-time pairing)
-│   │
-│   ├─ Bob → Alice: handshake.v1.exchange { ..., hasTrust: false }
-│   ├─ Alice verifies Bob's signature
-│   ├─ Both sides compute and display pairing code
-│   │
-│   ├─ User accepts
-│   │   ├─ Bob → Alice: handshake.v1.accept { deviceId }
-│   │   ├─ Both sides store peer's deviceId + publicKey in trust store
-│   │   └─ → Business messages
-│   │
-│   └─ User rejects
-│       └─ Bob → Alice: handshake.v1.reject { reason: "colink:handshake.user_rejected.v1" }
-│
-└─ deviceId known + publicKey mismatch (key changed)
-    │
-    └─ Bob → Alice: handshake.v1.reject { reason: "colink:handshake.key_changed.v1" }
-      └─ Bob removes Alice from trust store (requires re-pairing)
+Initiator                                      Receiver
+  │                                              │
+  │─── pairing.v1.request ────────────────────→  │  { publicKey, name, nonce }
+  │←── pairing.v1.exchange ────────────────────  │  { publicKey, name, nonce }
+  │                                              │
+  │  Both compute and display pairing code       │
+  │                                              │
+  │  ┌─ User accepts on receiver ──────────┐     │
+  │  │                                     │     │
+  │←── pairing.v1.confirm ─────────────────────  │
+  │─── pairing.v1.complete ────────────────────→  │  Initiator stores trust; receiver stores trust
+  │                                              │
+  │        ═══ Paired, session ready ═══         │
+  │                                              │
+  │  ┌─ User rejects on either side ───────┐    │
+  │  │                                     │    │
+  │←→─ pairing.v1.reject ─────────────────────  │  { reason }
+  │                                              │
 ```
 
-**Initiator (Alice) dialog decision after receiving `exchange`:**
+### Rules
 
-- If Alice's own `hasTrust == false` → show pairing dialog (Alice already knows pairing is needed)
-- If Alice's own `hasTrust == true` BUT Bob's `hasTrust == false` → show pairing dialog
-- If both `hasTrust == true` → fast path, no dialog
+1. The initiator sends `pairing.v1.request` as the first message after hello (when no trust record exists for the peer).
+2. The receiver responds with `pairing.v1.exchange`. Both sides then compute and display the pairing code.
+3. The receiver's user makes the accept/reject decision. The initiator's user verifies the code visually and may abort by disconnecting or sending `pairing.v1.reject`.
+4. Upon receiving `pairing.v1.confirm`, the initiator stores the peer's trust record and responds with `pairing.v1.complete`.
+5. The receiver records pending trust when sending `pairing.v1.confirm`, and only stores the peer's trust record after receiving `pairing.v1.complete`.
+6. Upon receiving `pairing.v1.complete`, the receiver knows the pairing is fully established. Both sides proceed to business messages.
+7. Either side may send `pairing.v1.reject` at any point during the pairing flow.
 
 ## Business Messages
 
-After handshake completes, both sides negotiate a cipher suite, then all subsequent messages are encrypted.
+After authentication or pairing completes, both sides negotiate a cipher suite, then all subsequent messages are encrypted.
 
 ### Negotiation
 
-Immediately after handshake, both sides exchange a `business.v1.negotiate` message to agree on a cipher suite.
-
-**Event type:** `business.v1.negotiate`
+Both sides simultaneously send a `business.v1.negotiate` message to agree on a cipher suite.
 
 ```json
 {
@@ -208,16 +395,17 @@ Immediately after handshake, both sides exchange a `business.v1.negotiate` messa
   "payload": {
     "supported": ["x25519-aes-256-gcm", "x25519-chacha20-poly1305"],
     "preferred": "x25519-aes-256-gcm"
-  }
+  },
+  ...
 }
 ```
 
-| Field     | Type     | Description |
-|-----------|----------|-------------|
+| Field | Type | Description |
+|-------|------|-------------|
 | supported | string[] | Cipher suites this device supports |
-| preferred | string   | First choice from the supported list |
+| preferred | string | First choice from the supported list |
 
-Both sides send this message simultaneously. The agreed suite is determined by: take the intersection of both `supported` lists, then pick the one that appears first in the initiator's `supported` list. If the intersection is empty, both sides close the connection.
+Both sides send this message simultaneously. The agreed suite is determined by: take the intersection of both `supported` lists, then pick the one that appears first in the initiator's `supported` list. If the intersection is empty, negotiation fails locally and business messages are rejected until a compatible negotiation succeeds.
 
 **Cipher suite format:** `<key-exchange>-<symmetric-cipher>`
 
@@ -226,7 +414,7 @@ Both sides send this message simultaneously. The agreed suite is determined by: 
 | `x25519-aes-256-gcm` | X25519 ECDH | AES-256-GCM | Default, hardware-accelerated on most platforms |
 | `x25519-chacha20-poly1305` | X25519 ECDH | ChaCha20-Poly1305 | Better on devices without AES-NI |
 
-**Key derivation after negotiation:**
+### Key Derivation
 
 1. Convert own Ed25519 private key → X25519 private key
 2. Convert peer's Ed25519 public key → X25519 public key
@@ -239,24 +427,23 @@ The AEAD construction (AES-GCM / ChaCha20-Poly1305) provides both confidentialit
 
 All business messages are wrapped in `business.v1.message`:
 
-**Event type:** `business.v1.message`
-
 ```json
 {
   "type": "business.v1.message",
   "payload": {
-    "ciphertext": "base64(AEAD-encrypt(original message JSON))",
+    "ciphertext": "base64(AEAD-encrypt(inner message JSON))",
     "nonce": "base64(12-byte IV)"
-  }
+  },
+  ...
 }
 ```
 
-| Field      | Type   | Description |
-|------------|--------|-------------|
-| ciphertext | string | AEAD-encrypted original message (includes auth tag) |
-| nonce      | string | 12-byte initialization vector, must never repeat with the same key |
+| Field | Type | Description |
+|-------|------|-------------|
+| ciphertext | string | AEAD-encrypted inner message (includes auth tag) |
+| nonce | string | 12-byte initialization vector, must never repeat with the same key |
 
-Decrypted content is a complete event envelope:
+Decrypted content uses the bare format:
 
 ```json
 {
@@ -269,7 +456,7 @@ The inner event types are defined in CoLinkBusiness.
 
 ## Keepalive
 
-After handshake completes, both sides maintain connection liveness using WebSocket Ping/Pong.
+After authentication or pairing completes, both sides maintain connection liveness using WebSocket Ping/Pong.
 
 - Each side sends one WebSocket `Ping` frame every 15 seconds
 - If 45 seconds pass without receiving any frame from the peer, treat the connection as dead and close it

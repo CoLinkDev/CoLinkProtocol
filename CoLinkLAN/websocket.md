@@ -1,5 +1,15 @@
 # LAN WebSocket Protocol
 
+> **Current Protocol Version: 1.0.0**
+>
+> This protocol uses semantic versioning. The version is exchanged during `protocol.hello` and governs compatibility between peers.
+> The `protocolVersion` field follows [Semantic Versioning](https://semver.org/):
+> - **Major** bump: breaking changes — peers with different major versions cannot communicate.
+> - **Minor** bump: new backward-compatible features — higher-version peers degrade gracefully.
+> - **Patch** bump: clarifications or bug fixes with no wire-level impact.
+>
+> When an implementation adopts protocol behavior changes from a newer document revision, it MUST update its advertised version to match the Current Protocol Version declared in that revision.
+
 LAN peer-to-peer communication is carried over a single WebSocket connection.
 
 ## Connection
@@ -16,7 +26,7 @@ Protocol-level errors (unknown message type, unexpected message for current stat
 
 Two formats coexist on the wire:
 
-### Bare Format (protocol.hello only)
+### Bare Format (protocol.hello / protocol.hello-ack only)
 
 ```json
 {
@@ -25,7 +35,7 @@ Two formats coexist on the wire:
 }
 ```
 
-`protocol.hello` is the only message that uses this format. It has no version suffix and its structure may only be extended by appending new fields.
+`protocol.hello` and `protocol.hello-ack` are the only messages that use this format. They have no version suffix and their structures may only be extended by appending new fields.
 
 ### Standard Envelope (all post-hello messages)
 
@@ -65,22 +75,26 @@ Type namespaces:
 
 | Namespace | Purpose |
 |-----------|---------|
-| `protocol` | Capability negotiation (bare format, no version suffix) |
+| `protocol` | Version negotiation (bare format, no version suffix) |
 | `auth` | Connection authentication for previously paired devices |
 | `pairing` | First-time trust establishment |
 | `heartbeat` | Application-level keepalive |
 | `business` | Encrypted business message transport |
 
-## Capability Negotiation (protocol.hello)
+## Version Negotiation (protocol.hello)
 
-After a WebSocket connection is established, both sides simultaneously send a `protocol.hello` message.
+After a WebSocket connection is established, both sides simultaneously send a `protocol.hello` message, then acknowledge with `protocol.hello-ack`.
+
+### Message Definitions
+
+**protocol.hello:**
 
 ```json
 {
   "type": "protocol.hello",
   "payload": {
     "deviceId": "660e8400-...",
-    "capabilities": ["auth.v1", "pairing.v1", "business.v1", "heartbeat.v1"],
+    "protocolVersion": "1.0.0",
     "extensions": {}
   }
 }
@@ -89,18 +103,78 @@ After a WebSocket connection is established, both sides simultaneously send a `p
 | Field | Type | Description |
 |-------|------|-------------|
 | deviceId | string | Sender's device ID |
-| capabilities | string[] | Supported signaling-layer capabilities, ordered by preference |
+| protocolVersion | string | Semantic version of the protocol implementation (major.minor.patch) |
 | extensions | object | Optional extension parameters. Receivers MUST ignore unknown keys |
+
+**protocol.hello-ack (compatible):**
+
+```json
+{
+  "type": "protocol.hello-ack",
+  "payload": {
+    "compatible": true
+  }
+}
+```
+
+**protocol.hello-ack (incompatible):**
+
+```json
+{
+  "type": "protocol.hello-ack",
+  "payload": {
+    "compatible": false,
+    "reason": "colink:protocol.major_mismatch.v1",
+    "message": "Local major version 2 is incompatible with peer major version 1"
+  }
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| compatible | boolean | Yes | Whether the peer's version is acceptable |
+| reason | string | When incompatible | Rejection reason code |
+| message | string | When incompatible | Human-readable description for logging/debugging |
+
+Well-known reasons:
+
+| Reason | Description |
+|--------|-------------|
+| `colink:protocol.major_mismatch.v1` | Major version differs, communication is impossible |
+| `colink:protocol.invalid_version.v1` | `protocolVersion` is missing, malformed, or not a valid semver string |
+| `colink:protocol.generic.v1` | Generic version negotiation failure |
+
+### Flow
+
+```
+A                                          B
+│                                          │
+│─── protocol.hello ─────────────────────→ │  { deviceId, protocolVersion, extensions }
+│←── protocol.hello ────────────────────── │  { deviceId, protocolVersion, extensions }
+│                                          │
+│  Both check version compatibility        │
+│                                          │
+│─── protocol.hello-ack ─────────────────→ │  { compatible: true }
+│←── protocol.hello-ack ────────────────── │  { compatible: true }
+│                                          │
+│      ═══ Proceed to auth/pairing ═══     │
+```
+
+### Version Semantics
+
+When a device needs to use a feature introduced in a specific version, it MUST check the peer's `protocolVersion` and fall back to an older behavior if the peer predates that feature. This decision is made inline in the relevant code path.
 
 ### Rules
 
-1. `protocol.hello` is the **only** message without a version suffix. Its structure is append-only and permanent.
+1. `protocol.hello` and `protocol.hello-ack` are the only messages that use bare format (no envelope). Their structures are append-only and permanent.
 2. Receivers MUST ignore unknown fields in `payload`.
-3. Receivers MUST ignore unrecognized strings in `capabilities`.
-4. Future evolution: add new fields to `payload` or new capability strings. Never remove or modify existing ones.
-5. Both sides send hello simultaneously after WebSocket connection is established.
-6. After hello exchange completes, both sides compute the capability intersection by exact string matching. Only capability strings present in both hello messages are considered supported for this connection.
-7. `deviceId` is a claimed identity before authentication completes. It MUST NOT be treated as an authenticated identity before authentication completes.
+3. Both sides send hello simultaneously after WebSocket connection is established.
+4. Upon receiving the peer's hello, each side checks version compatibility and sends `protocol.hello-ack`.
+5. If `protocolVersion` is missing, not a valid semver string, or cannot be parsed, the receiver sends `protocol.hello-ack` with `compatible: false` and an appropriate reason.
+6. If major versions differ, the receiver sends `protocol.hello-ack` with `compatible: false`.
+7. A side that sends or receives `compatible: false` MUST NOT proceed to auth/pairing. The connection remains open.
+8. The hello phase is complete when both sides have sent and received a `compatible: true` ack. Only then may auth/pairing proceed.
+9. `deviceId` is a claimed identity before authentication completes. It MUST NOT be treated as an authenticated identity before authentication completes.
 
 ## Authentication (auth.v1)
 
@@ -400,7 +474,83 @@ Initiator                                      Receiver
 
 ## Business Messages
 
-After authentication or pairing completes, both sides negotiate a cipher suite, then all subsequent messages are encrypted.
+After authentication or pairing completes, both sides first exchange business protocol versions, then negotiate a cipher suite. All subsequent messages after negotiation are encrypted.
+
+### Version Exchange
+
+Both sides simultaneously send a `business.v1.version` message to advertise their business protocol version. This message is sent in the standard envelope format, unencrypted. Upon receiving the peer's version, each side responds with `business.v1.version-ack`.
+
+**business.v1.version:**
+
+```json
+{
+  "type": "business.v1.version",
+  "payload": {
+    "businessVersion": "1.0.0"
+  },
+  ...
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| businessVersion | string | Semantic version of the business protocol implementation (major.minor.patch) |
+
+**business.v1.version-ack (compatible):**
+
+```json
+{
+  "type": "business.v1.version-ack",
+  "payload": {
+    "compatible": true
+  },
+  ...
+}
+```
+
+**business.v1.version-ack (incompatible):**
+
+```json
+{
+  "type": "business.v1.version-ack",
+  "payload": {
+    "compatible": false,
+    "reason": "colink:business.major_mismatch.v1",
+    "message": "Business major version 2 is incompatible with local major version 1"
+  },
+  ...
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| compatible | boolean | Yes | Whether the peer's business version is acceptable |
+| reason | string | When incompatible | Rejection reason code |
+| message | string | When incompatible | Human-readable description for logging/debugging |
+
+Well-known reasons:
+
+| Reason | Description |
+|--------|-------------|
+| `colink:business.major_mismatch.v1` | Major version differs, business communication is impossible |
+| `colink:business.invalid_version.v1` | `businessVersion` is missing, malformed, or not a valid semver string |
+| `colink:business.generic.v1` | Generic business version negotiation failure |
+
+**Flow:**
+
+```
+A                                              B
+│                                                 │
+│─── business.v1.version ───────────────────────→ │  { businessVersion }
+│←── business.v1.version ──────────────────────── │  { businessVersion }
+│                                                 │
+│─── business.v1.version-ack ───────────────────→ │  { compatible: true }
+│←── business.v1.version-ack ───────────────────  │  { compatible: true }
+│                                                 │
+│      ═══ Proceed to cipher negotiation ═══      │
+```
+
+Both sides MUST complete version exchange (including acks) before proceeding to cipher negotiation. A side that sends or receives `compatible: false` MUST NOT proceed to negotiation. The connection remains open.
 
 ### Negotiation
 

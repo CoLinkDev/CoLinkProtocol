@@ -90,3 +90,68 @@ Type namespaces:
 | Pairing | [pairing.md](pairing.md) |
 | Business Messages | [business.md](business.md) |
 | Keepalive | [keepalive.md](keepalive.md) |
+
+## Connection Lifecycle
+
+```
+┌───────────────────────────────────────────────────────────────────────┐
+│                        WebSocket Connected                             │
+└───────────────────────────┬───────────────────────────────────────────┘
+                            │
+                            ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                   protocol.hello (both sides)                          │
+│                   protocol.hello-ack (both sides)                      │
+├───────────────────────────┬───────────────────────────────────────────┤
+│                           │                                           │
+│              compatible: false ──→ Connection idle (no progress)       │
+│                           │                                           │
+│              compatible: true                                          │
+└───────────────────────────┬───────────────────────────────────────────┘
+                            │
+              ┌─────────────┴─────────────┐
+              │                           │
+              ▼                           ▼
+┌──────────────────────┐    ┌──────────────────────────┐
+│   auth.v1 (mutual    │    │   pairing.v1 (first-time │
+│   challenge-response)│    │   trust establishment)   │
+├──────────────────────┤    ├──────────────────────────┤
+│                      │    │                          │
+│  reject (unknown) ───┼───→│                          │
+│                      │    │                          │
+│  reject (other) ──→ ×│    │  reject ──→ ×            │
+│                      │    │                          │
+│  verified (both) ────┤    │  complete ───────────────┤
+└──────────┬───────────┘    └─────────────┬────────────┘
+           │                              │
+           └──────────────┬───────────────┘
+                          │
+                          ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│               business.v1.version / version-ack (both sides)          │
+├───────────────────────────┬───────────────────────────────────────────┤
+│              compatible: false ──→ Connection idle (no business)       │
+│              compatible: true                                          │
+└───────────────────────────┬───────────────────────────────────────────┘
+                            │
+              ┌─────────────┴─────────────────────────┐
+              │ Both protocolVersion >= 1.1.0?         │
+              │   Yes ──→ business.v1.key-exchange     │
+              │   No  ──→ skip (legacy derivation)    │
+              └─────────────┬─────────────────────────┘
+                            │
+                            ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│               business.v1.negotiate (both sides)                      │
+│               Agree on cipher suite                                    │
+│               Derive session key                                       │
+└───────────────────────────┬───────────────────────────────────────────┘
+                            │
+                            ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                    ═══ Session Ready ═══                               │
+│                                                                       │
+│   • business.v1.message (encrypted application data)                  │
+│   • heartbeat.v1.ping / pong (every 15s, 45s timeout)                 │
+└───────────────────────────────────────────────────────────────────────┘
+```

@@ -185,7 +185,8 @@ Both sides simultaneously send a `business.v1.negotiate` message to agree on a c
 {
   "type": "business.v1.negotiate",
   "payload": {
-    "supported": ["x25519-aes-256-gcm", "x25519-chacha20-poly1305"]
+    "supported": ["x25519-aes-256-gcm", "x25519-chacha20-poly1305"],
+    "preferred": "x25519-aes-256-gcm"
   },
   ...
 }
@@ -194,6 +195,7 @@ Both sides simultaneously send a `business.v1.negotiate` message to agree on a c
 | Field | Type | Description |
 |-------|------|-------------|
 | supported | string[] | Cipher suites this device supports |
+| preferred | string | First choice from the supported list |
 
 Both sides send this message simultaneously. The agreed suite is determined by: take the intersection of both `supported` lists, then pick the one that appears first in the initiator's `supported` list. If the intersection is empty, negotiation fails locally and business messages are rejected until a compatible negotiation succeeds.
 

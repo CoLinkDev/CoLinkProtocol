@@ -1,10 +1,10 @@
 # CoLink Business Protocol
 
-> **Current Protocol Version: 1.0.0**
+> **Current Protocol Version: 1.1.0**
 >
 > The business protocol uses semantic versioning, independent of the transport layer (LAN / Cloud Relay).
 > - **Major** bump: breaking changes — peers with different major versions cannot exchange business messages.
-> - **Minor** bump: new backward-compatible features — higher-version peers degrade gracefully.
+> - **Minor** bump: new message types or backward-compatible additions — required even when old peers simply ignore the unknown types.
 > - **Patch** bump: clarifications or bug fixes with no wire-level impact.
 >
 > When an implementation adopts protocol behavior changes from a newer document revision, it MUST update its advertised version to match the Current Protocol Version declared here.
@@ -18,6 +18,7 @@
 | `file-transfer-v2.md` | File transfer (current) |
 | `file-transfer-v1.md` | File transfer (deprecated) |
 | `music.md` | Lyrics sync |
+| `sysinfo.md` | System resource usage push |
 
 ## Version Exchange
 

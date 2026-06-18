@@ -19,6 +19,19 @@ All devices generate an **Ed25519** key pair at initialization time.
 - LAN protocol: mDNS discovery + WebSocket direct connection, handles local device pairing
 - Business protocol: unified message format, transport-agnostic (works over both server relay and LAN direct)
 
+## Versioning
+
+There are two independent version axes. They are bumped separately and serve different purposes:
+
+| Version | Where declared | Exchanged when | Governs |
+|---------|---------------|----------------|---------|
+| **LAN Protocol Version** | `CoLinkLAN/websocket.md` top | `protocol.hello` → `protocolVersion` | Transport-layer handshake: message envelope format, auth/pairing flow, cipher negotiation, key exchange method |
+| **Business Protocol Version** | `CoLinkBusiness/README.md` top | `business.v1.version` → `businessVersion` | Application-layer messages: text, clipboard, file transfer, music sync |
+
+The `v1` in message type names (e.g. `business.v1.version`, `auth.v1.challenge`) is a **namespace prefix** — it is part of the message type string and corresponds to the protocol version that governs the message. Adding or changing a message under a LAN Protocol namespace bumps the LAN Protocol version; likewise for Business Protocol messages.
+
+**Version compatibility rules** are defined independently by each protocol (see respective documents).
+
 ## Reason Format
 
 The `reason` field in protocol messages supports a structured format for machine-parseable reason codes.

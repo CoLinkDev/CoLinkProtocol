@@ -38,7 +38,7 @@ A device identity consists of:
 
 ## 2. Cloud Identity Synchronization
 
-Cloud sync refers to registering the local device's identity with the server via `POST /api/v1/devices`. See [CoLinkServer/devices/register.md](../CoLinkServer/devices/register.md) for the endpoint specification.
+Cloud sync refers to registering the local device's identity with the server via `POST /api/v1/devices`. See [CoLinkServerRESTAPI/devices/register.md](../CoLinkServerRESTAPI/devices/register.md) for the endpoint specification.
 
 ### Prerequisites
 
@@ -266,4 +266,3 @@ The periodic cycle ensures:
 - The local device list reflects any changes not covered by push events (e.g., device deletions by another client, server-side state corrections).
 
 If the WebSocket drops, the reconnection attempt itself triggers both identity push and device list refresh, so the periodic timer is only relevant during healthy connections.
-

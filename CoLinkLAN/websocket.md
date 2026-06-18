@@ -289,7 +289,7 @@ Initiator                                      Receiver
   │←── auth.v1.verified ───────────────────────  │
   │─── auth.v1.verified ──────────────────────→  │
   │                                              │
-  │        ═══ Authenticated, session ready ═══  │
+  │        ═══ Authenticated ═══                 │
 ```
 
 ### Rules
@@ -454,7 +454,7 @@ Initiator                                      Receiver
   │←── pairing.v1.confirm ─────────────────────  │
   │─── pairing.v1.complete ────────────────────→  │  Initiator stores trust; receiver stores trust
   │                                              │
-  │        ═══ Paired, session ready ═══         │
+  │        ═══ Paired ═══                        │
   │                                              │
   │  ┌─ User rejects on either side ───────┐    │
   │  │                                     │    │
@@ -474,7 +474,7 @@ Initiator                                      Receiver
 
 ## Business Messages
 
-After authentication or pairing completes, both sides first exchange business protocol versions, then negotiate a cipher suite. All subsequent messages after negotiation are encrypted.
+After authentication or pairing completes, both sides first exchange business protocol versions, then negotiate an encrypted business session. After negotiation completes, business messages are encrypted in `business.v1.message`.
 
 ### Version Exchange (business.v1.version, business.v1.version-ack)
 
@@ -632,7 +632,8 @@ A                                              B
 │─── business.v1.key-exchange ────────────────→│  { ephemeralPublicKey, signature }
 │←── business.v1.key-exchange ─────────────────│  { ephemeralPublicKey, signature }
 │                                              │
-│  Both verify signature, derive session key   │
+│  Both verify signature and keep verified     │
+│  ephemeral public keys for key derivation    │
 │                                              │
 │      ═══ Proceed to cipher negotiation ═══   │
 ```
@@ -659,8 +660,7 @@ Both sides simultaneously send a `business.v1.negotiate` message to agree on a c
 {
   "type": "business.v1.negotiate",
   "payload": {
-    "supported": ["x25519-aes-256-gcm", "x25519-chacha20-poly1305"],
-    "preferred": "x25519-aes-256-gcm"
+    "supported": ["x25519-aes-256-gcm", "x25519-chacha20-poly1305"]
   },
   ...
 }
@@ -669,7 +669,6 @@ Both sides simultaneously send a `business.v1.negotiate` message to agree on a c
 | Field | Type | Description |
 |-------|------|-------------|
 | supported | string[] | Cipher suites this device supports |
-| preferred | string | First choice from the supported list |
 
 Both sides send this message simultaneously. The agreed suite is determined by: take the intersection of both `supported` lists, then pick the one that appears first in the initiator's `supported` list. If the intersection is empty, negotiation fails locally and business messages are rejected until a compatible negotiation succeeds.
 
@@ -753,7 +752,7 @@ The inner event types are defined in CoLinkBusiness.
 
 ## Keepalive
 
-After authentication or pairing completes, both sides maintain connection liveness using application-level heartbeat messages. This replaces reliance on WebSocket Ping/Pong, which can be intercepted or falsely acknowledged by network intermediaries (proxies, load balancers).
+After encrypted business session negotiation completes, both sides maintain connection liveness using application-level heartbeat messages. This replaces reliance on WebSocket Ping/Pong, which can be intercepted or falsely acknowledged by network intermediaries (proxies, load balancers).
 
 ### Message Definitions
 

@@ -4,7 +4,7 @@
 
 ```
 CoLinkProtocol/
-├── CoLinkServer/     — Server protocol (device ↔ cloud server)
+├── CoLinkServerRESTAPI/ — Server protocol (device ↔ cloud server)
 ├── CoLinkLAN/        — LAN protocol (device ↔ device, local network)
 └── CoLinkBusiness/   — Business protocol (application-level messages)
 ```
@@ -28,7 +28,7 @@ There are two independent version axes. They are bumped separately and serve dif
 | **LAN Protocol Version** | `CoLinkLAN/websocket.md` top | `protocol.hello` → `protocolVersion` | Transport-layer handshake: message envelope format, auth/pairing flow, cipher negotiation, key exchange method |
 | **Business Protocol Version** | `CoLinkBusiness/README.md` top | `business.v1.version` → `businessVersion` | Application-layer messages: text, clipboard, file transfer, music sync |
 
-The `v1` in message type names (e.g. `business.v1.version`, `auth.v1.challenge`) is a **namespace prefix** — it is part of the message type string and corresponds to the protocol version that governs the message. Adding or changing a message under a LAN Protocol namespace bumps the LAN Protocol version; likewise for Business Protocol messages.
+The `v1` in message type names (e.g. `business.v1.version`, `auth.v1.challenge`) is a message schema major version. It is part of the message type string, but it is not the same thing as the advertised LAN or Business semver. Each document defines which advertised version governs a message. For example, `business.v1.key-exchange` is part of the LAN encrypted-session setup and is governed by the LAN Protocol Version.
 
 **Version compatibility rules** are defined independently by each protocol (see respective documents).
 

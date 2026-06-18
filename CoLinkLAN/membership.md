@@ -209,7 +209,7 @@ SWIM is the sole authority on membership state. Connection lifecycle (when to es
 | SWIM: dead/left, WS: connected  | Clean up WS connection                      |
 | WS: active, SWIM ping: failing  | SWIM proceeds normally — WS liveness does not override SWIM |
 
-SWIM and WebSocket keepalive (see `websocket.md`) are orthogonal. WS activity is not used as alive evidence for membership decisions.
+SWIM and WebSocket keepalive (see `websocket/keepalive.md`) are orthogonal. WS activity is not used as alive evidence for membership decisions.
 
 #### Conflict Resolution
 

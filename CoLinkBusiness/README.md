@@ -23,5 +23,5 @@
 
 The business version is exchanged differently depending on the transport:
 
-- **LAN**: `business.v1.version` / `business.v1.version-ack` signaling messages after auth/pairing, before cipher negotiation. See `CoLinkLAN/websocket.md`.
+- **LAN**: `business.v1.version` / `business.v1.version-ack` signaling messages after auth/pairing, before cipher negotiation. See `CoLinkLAN/websocket/business.md`.
 - **Cloud Relay**: Reported via WebSocket query parameter `businessVersion` on connect and distributed through `device.online` events. See `CoLinkServerRESTAPI/websocket/v1.md`.

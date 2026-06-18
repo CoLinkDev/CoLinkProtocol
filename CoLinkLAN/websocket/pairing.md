@@ -1,0 +1,170 @@
+# Pairing (pairing.v1)
+
+Pairing establishes trust between two devices that have never communicated before. It uses a short numeric code displayed on both screens for the user to visually confirm, preventing man-in-the-middle attacks.
+
+## Event Types
+
+| Type | Direction | Description |
+|------|-----------|-------------|
+| `pairing.v1.request` | Initiator → Receiver | Propose pairing with identity information |
+| `pairing.v1.exchange` | Receiver → Initiator | Respond with receiver's identity information |
+| `pairing.v1.confirm` | Receiver → Initiator | User confirmed pairing code match |
+| `pairing.v1.complete` | Initiator → Receiver | Acknowledge confirmation, both sides store trust |
+| `pairing.v1.reject` | Either → Either | User rejected or timeout |
+
+## Message Definitions
+
+**pairing.v1.request:**
+
+```json
+{
+  "type": "pairing.v1.request",
+  "payload": {
+    "publicKey": "base64(publicKey)",
+    "name": "Alice's Phone",
+    "nonce": "random-string-32chars"
+  },
+  ...
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| publicKey | string | Sender's public key (Ed25519) |
+| name | string | Sender's device display name |
+| nonce | string | Random string, participates in pairing code derivation |
+
+**pairing.v1.exchange:**
+
+```json
+{
+  "type": "pairing.v1.exchange",
+  "payload": {
+    "publicKey": "base64(publicKey)",
+    "name": "Bob's Laptop",
+    "nonce": "random-string-32chars"
+  },
+  ...
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| publicKey | string | Receiver's public key (Ed25519) |
+| name | string | Receiver's device display name |
+| nonce | string | Random string, participates in pairing code derivation |
+
+**pairing.v1.confirm:**
+
+```json
+{
+  "type": "pairing.v1.confirm",
+  "payload": {},
+  ...
+}
+```
+
+No additional fields. Indicates the receiver's user has verified the pairing code and accepted the pairing.
+
+**pairing.v1.complete:**
+
+```json
+{
+  "type": "pairing.v1.complete",
+  "payload": {},
+  ...
+}
+```
+
+No additional fields. Acknowledges that the initiator has also stored the trust record.
+
+**pairing.v1.reject:**
+
+```json
+{
+  "type": "pairing.v1.reject",
+  "payload": {
+    "reason": "colink:pairing.user_rejected.v1",
+    "message": "User declined the pairing request"
+  },
+  ...
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| reason | string | Yes | Rejection reason |
+| message | string | Yes | Human-readable description for logging/debugging |
+| details | object | No | Extensible structured metadata. Receivers MUST ignore unknown keys |
+
+Well-known reasons:
+
+| Reason | Description |
+|--------|-------------|
+| `colink:pairing.user_rejected.v1` | User declined the pairing request |
+| `colink:pairing.timeout.v1` | User did not respond within the allowed time |
+| `colink:pairing.code_mismatch.v1` | Pairing code does not match |
+| `colink:pairing.generic.v1` | Generic pairing failure not covered by a specific reason |
+
+## Pairing Code
+
+Both devices derive a short numeric code for the user to visually compare.
+
+**Derivation:**
+
+```
+canonical = "domain=colink-lan-pairing-code\n"
+          + "publicKeyA=<lexicographically smaller public key>\n"
+          + "publicKeyB=<lexicographically larger public key>\n"
+          + "nonceA=<pairing.v1.request nonce>\n"
+          + "nonceB=<pairing.v1.exchange nonce>"
+
+code = truncate(SHA-256(canonical), 6 digits)
+```
+
+- Inputs: both public keys (lexicographically sorted) + both nonces encoded as the canonical string above
+- Public key sorting ensures both sides compute the same value regardless of role
+- Nonces are not sorted: `nonceA` is the `pairing.v1.request` nonce, `nonceB` is the `pairing.v1.exchange` nonce
+- Truncated to 6 decimal digits for easy visual comparison
+
+**Example user experience:**
+
+```
+Alice's screen: "Pairing with Bob's Laptop. Confirm the other device shows: 847291"
+Bob's screen:   "Alice's Phone wants to pair. Confirm the other device shows: 847291. Accept?"
+```
+
+If a man-in-the-middle substitutes public keys, the two sides will compute different codes.
+
+## Flow
+
+```
+Initiator                                      Receiver
+  │                                              │
+  │─── pairing.v1.request ────────────────────→  │  { publicKey, name, nonce }
+  │←── pairing.v1.exchange ────────────────────  │  { publicKey, name, nonce }
+  │                                              │
+  │  Both compute and display pairing code       │
+  │                                              │
+  │  ┌─ User accepts on receiver ──────────┐     │
+  │  │                                     │     │
+  │←── pairing.v1.confirm ─────────────────────  │
+  │─── pairing.v1.complete ────────────────────→  │  Initiator stores trust; receiver stores trust
+  │                                              │
+  │        ═══ Paired ═══                        │
+  │                                              │
+  │  ┌─ User rejects on either side ───────┐    │
+  │  │                                     │    │
+  │←→─ pairing.v1.reject ─────────────────────  │  { reason }
+  │                                              │
+```
+
+## Rules
+
+1. The initiator sends `pairing.v1.request` as the first message after hello (when no trust record exists for the peer).
+2. The receiver responds with `pairing.v1.exchange`. Both sides then compute and display the pairing code.
+3. The receiver's user makes the accept/reject decision. The initiator's user verifies the code visually and may abort by disconnecting or sending `pairing.v1.reject`.
+4. Upon receiving `pairing.v1.confirm`, the initiator stores the peer's trust record and responds with `pairing.v1.complete`.
+5. The receiver records pending trust when sending `pairing.v1.confirm`, and only stores the peer's trust record after receiving `pairing.v1.complete`.
+6. Upon receiving `pairing.v1.complete`, the receiver knows the pairing is fully established. Both sides proceed to business messages.
+7. Either side may send `pairing.v1.reject` at any point during the pairing flow.

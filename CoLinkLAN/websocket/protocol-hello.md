@@ -90,5 +90,5 @@ When a device needs to use a feature introduced in a specific version, it MUST c
 5. If `protocolVersion` is missing, not a valid semver string, or cannot be parsed, the receiver sends `protocol.hello-ack` with `compatible: false` and an appropriate reason.
 6. If major versions differ, the receiver sends `protocol.hello-ack` with `compatible: false`.
 7. A side that sends or receives `compatible: false` MUST NOT proceed to auth/pairing. The connection remains open.
-8. The hello phase is complete when both sides have sent and received a `compatible: true` ack. Only then may auth/pairing proceed.
+8. The hello phase is complete when both sides have sent and received a `compatible: true` ack. Only then MAY auth/pairing proceed.
 9. `deviceId` is a claimed identity before authentication completes. It MUST NOT be treated as an authenticated identity before authentication completes.

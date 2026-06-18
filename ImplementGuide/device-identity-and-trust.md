@@ -32,8 +32,8 @@ A device identity consists of:
 ### Rules
 
 - Generate exactly once. On subsequent launches, load from persistent storage.
-- The device identifier is the universal key for this device across all subsystems. It should not change across app reinstalls on the same logical device (where possible).
-- The private key should be stored securely (platform keystore, encrypted storage, etc.).
+- The device identifier is the universal key for this device across all subsystems. It SHOULD NOT change across app reinstalls on the same logical device (where possible).
+- The private key SHOULD be stored securely (platform keystore, encrypted storage, etc.).
 - No network call is made during identity generation. This is a purely local operation.
 
 ## 2. Cloud Identity Synchronization
@@ -55,7 +55,7 @@ Identity is pushed to the server at these points:
 | WebSocket (re)connection | Before each WebSocket connection attempt, push identity to ensure server has current data |
 | Every 5 minutes (recommended) | While the cloud WebSocket is connected and healthy, periodically re-push identity |
 
-The periodic sync ensures the server always has up-to-date device metadata (name changes, etc.) even if no reconnection event occurs. The recommended interval is 5 minutes; implementations may adjust based on platform constraints.
+The periodic sync ensures the server always has up-to-date device metadata (name changes, etc.) even if no reconnection event occurs. The recommended interval is 5 minutes; implementations MAY adjust based on platform constraints.
 
 ### LAN-Only Mode
 
@@ -63,7 +63,7 @@ If no cloud session exists (user is not logged in), device identity remains loca
 
 ### Server Idempotency
 
-The server's `POST /api/v1/devices` endpoint should be idempotent:
+The server's `POST /api/v1/devices` endpoint SHOULD be idempotent:
 - Same device ID + same data → no meaningful change (response is identical)
 - Same device ID + different public key → updates key and `publicKeyUpdatedAt`
 - Same device ID + different user → 409 Conflict (prevents cross-user collision)
@@ -124,7 +124,7 @@ rebuild merged device list:
 
 ### Device Object
 
-After reconciliation, each device in the merged list should convey the following information (naming and structure are implementation-defined):
+After reconciliation, each device in the merged list SHOULD convey the following information (naming and structure are implementation-defined):
 
 | Information | Description |
 |-------------|-------------|
@@ -187,7 +187,7 @@ Cloud-synced devices discovered on LAN do not require separate pairing — they 
 
 ## 5. Key Merge Logic
 
-When the cloud device list is refreshed, each device's key must be reconciled with the local trust record.
+When the cloud device list is refreshed, each device's key MUST be reconciled with the local trust record.
 
 ### Decision Table
 
@@ -195,12 +195,12 @@ When the cloud device list is refreshed, each device's key must be reconciled wi
 |-----------|--------|
 | No existing trust record | Create record with cloud trust, use cloud key and timestamp |
 | Keys match | Enable cloud trust, update name and timestamp if cloud is newer |
-| Keys differ, cloud timestamp newer | Accept cloud key, enable cloud trust, **clear LAN trust** (key changed, LAN must re-pair) |
+| Keys differ, cloud timestamp newer | Accept cloud key, enable cloud trust, **clear LAN trust** (key changed, LAN MUST re-pair) |
 | Keys differ, cloud timestamp NOT newer | Disable cloud trust (cloud has stale key, local is more recent) |
 
 ### Why Clear LAN Trust on Key Change
 
-If the cloud has a newer key, it means the remote device rotated its key pair. The previous key (used during LAN pairing) is now invalid. The LAN pairing is based on a specific key — if that key changes, the pairing is no longer cryptographically valid and must be re-established.
+If the cloud has a newer key, it means the remote device rotated its key pair. The previous key (used during LAN pairing) is now invalid. The LAN pairing is based on a specific key — if that key changes, the pairing is no longer cryptographically valid and MUST be re-established.
 
 ### LAN Pairing Key Merge
 
@@ -237,7 +237,7 @@ When the client loses its authenticated state — whether by user-initiated logo
 
 ## 7. Key Rotation
 
-A device may rotate its key pair (for security or recovery purposes).
+A device MAY rotate its key pair (for security or recovery purposes).
 
 ### Procedure
 

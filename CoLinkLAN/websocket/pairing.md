@@ -163,8 +163,8 @@ Initiator                                      Receiver
 
 1. The initiator sends `pairing.v1.request` as the first message after hello (when no trust record exists for the peer).
 2. The receiver responds with `pairing.v1.exchange`. Both sides then compute and display the pairing code.
-3. The receiver's user makes the accept/reject decision. The initiator's user verifies the code visually and may abort by disconnecting or sending `pairing.v1.reject`.
+3. The receiver's user makes the accept/reject decision. The initiator's user verifies the code visually and MAY abort by disconnecting or sending `pairing.v1.reject`.
 4. Upon receiving `pairing.v1.confirm`, the initiator stores the peer's trust record and responds with `pairing.v1.complete`.
 5. The receiver records pending trust when sending `pairing.v1.confirm`, and only stores the peer's trust record after receiving `pairing.v1.complete`.
 6. Upon receiving `pairing.v1.complete`, the receiver knows the pairing is fully established. Both sides proceed to business messages.
-7. Either side may send `pairing.v1.reject` at any point during the pairing flow.
+7. Either side MAY send `pairing.v1.reject` at any point during the pairing flow.

@@ -20,7 +20,7 @@ ws://<localIp>:<localPort>/peer
 
 Each device runs a local WebSocket server (default port 27777).
 
-Protocol-level errors (unknown message type, unexpected message for current state, timing violations) MUST NOT cause the transport connection to close. The receiver should ignore, reject, or buffer the message within its local state machine. Connection closure is only triggered by: transport-layer disconnect, explicit close, keepalive timeout, or local resource policy.
+Protocol-level errors (unknown message type, unexpected message for current state, timing violations) MUST NOT cause the transport connection to close. The receiver SHOULD ignore, reject, or buffer the message within its local state machine. Connection closure is only triggered by: transport-layer disconnect, explicit close, keepalive timeout, or local resource policy.
 
 ## Message Format
 
@@ -35,7 +35,7 @@ Two formats coexist on the wire:
 }
 ```
 
-`protocol.hello` and `protocol.hello-ack` are the only messages that use this format. They have no version suffix and their structures may only be extended by appending new fields.
+`protocol.hello` and `protocol.hello-ack` are the only messages that use this format. They have no version suffix and their structures MAY only be extended by appending new fields.
 
 ### Standard Envelope (all post-hello messages)
 
@@ -68,7 +68,7 @@ Two formats coexist on the wire:
 - `seq` is per-connection, per-direction. Each side maintains its own counter.
 - A gap in `seq` indicates message loss.
 - `timestamp` is the sender's local clock.
-- Before authentication completes, `from` is merely a claimed identity. The receiver may use it to look up a candidate trust record, but MUST verify it through `auth.v1` signature verification or `pairing.v1` code confirmation.
+- Before authentication completes, `from` is merely a claimed identity. The receiver MAY use it to look up a candidate trust record, but MUST verify it through `auth.v1` signature verification or `pairing.v1` code confirmation.
 - `to` MUST equal the local deviceId. A receiver MUST reject any message where `to` does not match itself.
 
 Type namespaces:

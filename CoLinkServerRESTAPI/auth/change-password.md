@@ -38,7 +38,7 @@ Header: `Authorization: Bearer <token>`
 
 - All existing refresh tokens are revoked after password change
 - The current access token remains valid until expiry
-- Client should re-login after password change
+- Client SHOULD re-login after password change
 
 ## Errors
 

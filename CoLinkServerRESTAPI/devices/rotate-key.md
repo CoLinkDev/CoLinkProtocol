@@ -35,7 +35,7 @@ Header: `Authorization: Bearer <token>`
 ## Behavior
 
 - The old public key is immediately invalidated
-- Other devices should refresh their device list cache to get the new key
+- Other devices SHOULD refresh their device list cache to get the new key
 - Existing LAN connections authenticated with the old key will fail on next handshake
 
 ## Errors

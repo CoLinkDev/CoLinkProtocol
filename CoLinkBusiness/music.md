@@ -51,13 +51,13 @@ Sent when the playing track changes or playback stops.
 | coverData | string/null  | Base64 encoded cover image           |
 | duration  | number/null  | Track duration in milliseconds       |
 
-When `trackId` is `null`, all other fields should be `null`. Receivers should clear all lyrics and progress state upon receiving this.
+When `trackId` is `null`, all other fields SHOULD be `null`. Receivers SHOULD clear all lyrics and progress state upon receiving this.
 
 ---
 
 ## music.v1.lyric
 
-Sent after a track change, once lyrics are available. May arrive after `music.v1.track` if lyrics require async fetching.
+Sent after a track change, once lyrics are available. MAY arrive after `music.v1.track` if lyrics require async fetching.
 
 ```json
 {
@@ -78,7 +78,7 @@ Sent after a track change, once lyrics are available. May arrive after `music.v1
 
 | Field           | Type         | Description                          |
 |-----------------|--------------|--------------------------------------|
-| trackId         | string       | Must match current track             |
+| trackId         | string       | MUST match current track             |
 | lines           | LyricLine[]/null | Primary lyrics (original language) |
 | translatedLines | LyricLine[]/null | Translated lyrics                 |
 
@@ -92,9 +92,9 @@ Sent after a track change, once lyrics are available. May arrive after `music.v1
 ### Notes
 
 - `lines` sorted ascending by `time`
-- `translatedLines`, when present, should have timestamps aligned with `lines`
+- `translatedLines`, when present, SHOULD have timestamps aligned with `lines`
 - If `lines` is `null`, the track has no lyrics available
-- Receivers should discard lyric messages whose `trackId` does not match the current track
+- Receivers SHOULD discard lyric messages whose `trackId` does not match the current track
 
 ---
 
@@ -115,16 +115,16 @@ Sent periodically by the source to synchronize playback position.
 
 | Field    | Type    | Description                              |
 |----------|---------|------------------------------------------|
-| trackId  | string  | Must match current track                 |
+| trackId  | string  | MUST match current track                 |
 | progress | number  | Current playback position in milliseconds |
 | paused   | boolean | Whether playback is currently paused     |
 
 ### Notes
 
-- Source should push at a fixed interval while playing (recommended: 100ms)
-- When `paused` becomes `true`, source may reduce or stop sending progress updates until playback resumes
-- When `paused` changes from `true` to `false`, source should immediately send a progress message to allow receivers to re-sync
-- Receivers should discard progress messages whose `trackId` does not match the current track
+- Source SHOULD push at a fixed interval while playing (recommended: 100ms)
+- When `paused` becomes `true`, source MAY reduce or stop sending progress updates until playback resumes
+- When `paused` changes from `true` to `false`, source SHOULD immediately send a progress message to allow receivers to re-sync
+- Receivers SHOULD discard progress messages whose `trackId` does not match the current track
 
 ---
 
@@ -143,9 +143,9 @@ No payload fields required.
 
 ### Notes
 
-- Receivers should send at a fixed interval (recommended: 5s)
-- Source should stop pushing data if no `alive` message is received from any receiver within a timeout period (recommended: 15s)
-- Source should resume pushing when a new `alive` message arrives
+- Receivers SHOULD send at a fixed interval (recommended: 5s)
+- Source SHOULD stop pushing data if no `alive` message is received from any receiver within a timeout period (recommended: 15s)
+- Source SHOULD resume pushing when a new `alive` message arrives
 
 ---
 
@@ -164,6 +164,6 @@ No payload fields required.
 
 ### Notes
 
-- Source should respond by immediately pushing three messages in order: `music.v1.track`, `music.v1.lyric`, and `music.v1.progress`
-- If no track is currently playing, source should respond with a `music.v1.track` message where `trackId` is `null`
+- Source SHOULD respond by immediately pushing three messages in order: `music.v1.track`, `music.v1.lyric`, and `music.v1.progress`
+- If no track is currently playing, source SHOULD respond with a `music.v1.track` message where `trackId` is `null`
 - Typical use case: receiver first connects or reconnects and needs to sync

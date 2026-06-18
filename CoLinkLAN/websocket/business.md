@@ -264,7 +264,7 @@ All business messages are wrapped in `business.v1.message`:
 | Field | Type | Description |
 |-------|------|-------------|
 | ciphertext | string | AEAD-encrypted inner message (includes auth tag) |
-| nonce | string | 12-byte initialization vector, must never repeat with the same key |
+| nonce | string | 12-byte initialization vector, MUST never repeat with the same key |
 
 Decrypted content uses the bare format:
 

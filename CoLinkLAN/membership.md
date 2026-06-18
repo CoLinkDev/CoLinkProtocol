@@ -58,7 +58,7 @@ Runs over HTTP on the existing peer server. Implements [SWIM](https://www.cs.cor
 POST http://<ip>:<port>/peer/swim/v1
 ```
 
-Request and response bodies are SWIM messages. No additional port or persistent connection required. All operations are blocking request-response — one probe round must complete before the next begins.
+Request and response bodies are SWIM messages. No additional port or persistent connection required. All operations are blocking request-response — one probe round MUST complete before the next begins.
 
 #### Validation (receiver side)
 
@@ -78,7 +78,7 @@ Request and response bodies are SWIM messages. No additional port or persistent 
 | suspectTimeout      | 3000ms  | Time before suspect becomes dead                |
 | maxGossipPerMsg     | 10      | Older entries displaced by newer ones           |
 
-These are recommended starting values. Implementations may adjust based on actual situation.
+These are recommended starting values. Implementations MAY adjust based on actual situation.
 
 ### Message Format
 
@@ -190,7 +190,7 @@ The receiver responds with `ack`. Upon receiving the ack, the new node marks the
 
 Receivers that encounter an unknown `deviceId` transitioning to `alive` treat this as a **memberJoined** event.
 
-A node re-joining after `dead` or `left` must use a higher incarnation than its previous value.
+A node re-joining after `dead` or `left` MUST use a higher incarnation than its previous value.
 
 ### Lifecycle: left
 
@@ -214,4 +214,4 @@ SWIM and WebSocket keepalive (see `websocket/keepalive.md`) are orthogonal. WS a
 
 #### Conflict Resolution
 
-Either peer may initiate a WebSocket connection when it needs. If both peers initiate simultaneously and two connections are established, both sides detect the duplicate after handshake and resolve the conflict deterministically: the connection initiated by the peer with the smaller `deviceId` (lexicographic comparison) is kept, and the other is closed.
+Either peer MAY initiate a WebSocket connection when it needs. If both peers initiate simultaneously and two connections are established, both sides detect the duplicate after handshake and resolve the conflict deterministically: the connection initiated by the peer with the smaller `deviceId` (lexicographic comparison) is kept, and the other is closed.

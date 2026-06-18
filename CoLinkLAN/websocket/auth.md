@@ -90,7 +90,7 @@ Well-known reasons:
 
 | Reason | Description |
 |--------|-------------|
-| `colink:auth.unknown_device.v1` | No trust record for this device — initiator should fall back to `pairing.v1` |
+| `colink:auth.unknown_device.v1` | No trust record for this device — initiator SHOULD fall back to `pairing.v1` |
 | `colink:auth.signature_invalid.v1` | Signature verification failed |
 | `colink:auth.key_changed.v1` | Public key differs from stored record — trust revoked |
 | `colink:auth.generic.v1` | Generic authentication failure not covered by a specific reason |
@@ -120,5 +120,5 @@ Initiator                                      Receiver
 2. Upon receiving the peer's challenge, each side sends `auth.v1.response` (initiator first).
 3. To verify a response, the receiver looks up the public key in its local trust store using the `from` field of the envelope.
 4. If verification passes, send `auth.v1.verified`. If it fails, send `auth.v1.reject`.
-5. Upon receiving `auth.v1.reject` with reason `colink:auth.unknown_device.v1`, the initiator may fall back to `pairing.v1`.
+5. Upon receiving `auth.v1.reject` with reason `colink:auth.unknown_device.v1`, the initiator MAY fall back to `pairing.v1`.
 6. Upon receiving `auth.v1.reject` with reason `colink:auth.key_changed.v1`, the receiver removes the peer from its trust store.

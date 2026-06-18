@@ -9,6 +9,10 @@ CoLinkProtocol/
 └── CoLinkBusiness/   — Business protocol (application-level messages)
 ```
 
+## Conventions
+
+The key words "MUST", "MUST NOT", "SHOULD", "SHOULD NOT", "MAY" in all documents within this repository are to be interpreted as described in [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119).
+
 ## Cryptography
 
 All devices generate an **Ed25519** key pair at initialization time.

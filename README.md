@@ -5,7 +5,7 @@
 ```
 CoLinkProtocol/
 ├── CoLinkServerRESTAPI/ — Server protocol (device ↔ cloud server)
-├── CoLinkLAN/        — LAN protocol (device ↔ device, local network)
+├── CoLinkP2P/        — LAN protocol (device ↔ device, local network)
 └── CoLinkBusiness/   — Business protocol (application-level messages)
 ```
 

@@ -1,6 +1,6 @@
 # CoLink Business Protocol
 
-> **Current Protocol Version: 1.1.0**
+> **Current Protocol Version: 1.2.0**
 >
 > The business protocol uses semantic versioning, independent of the transport layer (LAN / Cloud Relay).
 > - **Major** bump: breaking changes — peers with different major versions cannot exchange business messages.

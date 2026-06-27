@@ -47,6 +47,24 @@ Total header: 8 bytes.
 
 `finish` signals that the sender has transmitted all chunks. It does NOT mean the transfer is complete — the receiver must still verify the checksum and send `file.v2.done` on the control plane.
 
+## Checksum Algorithm Versioning
+
+Checksum algorithm support is governed by the Business Protocol Version. It is not negotiated independently in `file.v2.offer`.
+
+Before creating an offer, the sender determines the effective Business Protocol Version as the lower of its own and the receiver's advertised `businessVersion`. The versions MUST have the same major version, as required by the Business Protocol version compatibility rules. The sender MUST use a checksum algorithm whose minimum version is less than or equal to the effective version.
+
+| Checksum algorithm | Minimum Business Protocol Version | Wire format | Description |
+|--------------------|-----------------------------------|-------------|-------------|
+| BLAKE3             | v1.2.0 | `blake3:<lowercase-hex-digest>` | BLAKE3 checksum of the complete file |
+| SHA-256            | v1.2.0 | `sha256:<lowercase-hex-digest>` | SHA-256 checksum of the complete file |
+| None               | v1.3.0 | `none:none` | No checksum calculation or verification |
+
+The following compatibility rules apply:
+
+- Adding a checksum algorithm requires a Business Protocol minor version increase.
+- A sender MUST select an algorithm available for the effective Business Protocol Version and MUST NOT use an algorithm introduced after that version. When communicating with an older peer, a newer sender MUST therefore downgrade to an algorithm available at the effective version. An implementation advertising a newer minor version MUST continue accepting every algorithm registered for earlier versions within the same major version.
+- A receiver MUST determine the algorithm from the prefix and verify the complete file with that algorithm; it MUST NOT reinterpret the digest or silently fall back to another algorithm. If the prefix is missing, malformed, or unsupported for the effective Business Protocol Version, the receiver MUST reject the offer before accepting file data.
+
 ## Control Plane Messages (JSON, main WebSocket)
 
 ### file.v2.offer
@@ -72,7 +90,7 @@ Total header: 8 bytes.
 | fileSize    | number | Total size in bytes                         |
 | totalChunks | number | Total number of chunks                      |
 | chunkSize   | number | Bytes per chunk (last chunk may be smaller) |
-| checksum    | string | `blake3:<hash>` of the full file            |
+| checksum    | string | Algorithm-qualified checksum of the full file, formatted as `<algorithm>:<hash>` |
 
 ### file.v2.accept
 

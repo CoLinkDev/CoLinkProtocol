@@ -2,7 +2,7 @@
 
 > **Current Protocol Version: 1.3.0**
 >
-> The business protocol uses semantic versioning, independent of the transport layer (LAN / Cloud Relay).
+> The business protocol uses semantic versioning, independent of the transport layer (P2P / Cloud Relay).
 > - **Major** bump: breaking changes — peers with different major versions cannot exchange business messages.
 > - **Minor** bump: new message types or backward-compatible additions — required even when old peers simply ignore the unknown types.
 > - **Patch** bump: clarifications or bug fixes with no wire-level impact.
@@ -24,5 +24,5 @@
 
 The business version is exchanged differently depending on the transport:
 
-- **LAN**: `business.v1.version` / `business.v1.version-ack` signaling messages after auth/pairing, before cipher negotiation. See `CoLinkLAN/websocket/business.md`.
+- **P2P**: `business.v1.version` / `business.v1.version-ack` signaling messages after auth/pairing, before cipher negotiation. See `CoLinkP2P/websocket/business.md`.
 - **Cloud Relay**: Reported via WebSocket query parameter `businessVersion` on connect and distributed through `device.online` events. See `CoLinkServerRESTAPI/websocket/v1.md`.

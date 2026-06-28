@@ -1,4 +1,4 @@
-# LAN WebSocket Protocol
+# P2P WebSocket Protocol
 
 > **Current Protocol Version: 1.1.0**
 >
@@ -10,7 +10,7 @@
 >
 > When an implementation adopts protocol behavior changes from a newer document revision, it MUST update its advertised version to match the Current Protocol Version declared in that revision.
 
-LAN peer-to-peer communication is carried over a single WebSocket connection.
+P2P communication is carried over a single WebSocket connection.
 
 ## Connection
 

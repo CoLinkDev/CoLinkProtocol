@@ -5,7 +5,7 @@
 ```
 CoLinkProtocol/
 ├── CoLinkServerRESTAPI/ — Server protocol (device ↔ cloud server)
-├── CoLinkP2P/        — LAN protocol (device ↔ device, local network)
+├── CoLinkP2P/        — P2P protocol (device ↔ device)
 └── CoLinkBusiness/   — Business protocol (application-level messages)
 ```
 
@@ -20,8 +20,8 @@ All devices generate an **Ed25519** key pair at initialization time.
 ## Design Principles
 
 - Server protocol: HTTP REST + WebSocket, handles account system and message relay
-- LAN protocol: mDNS discovery + WebSocket direct connection, handles local device pairing
-- Business protocol: unified message format, transport-agnostic (works over both server relay and LAN direct)
+- P2P protocol: peer discovery + WebSocket direct connection, handles device pairing
+- Business protocol: unified message format, transport-agnostic (works over both server relay and P2P direct connections)
 
 ## Versioning
 
@@ -29,10 +29,10 @@ There are two independent version axes. They are bumped separately and serve dif
 
 | Version | Where declared | Exchanged when | Governs |
 |---------|---------------|----------------|---------|
-| **LAN Protocol Version** | `CoLinkLAN/websocket/README.md` top | `protocol.hello` → `protocolVersion` | Transport-layer handshake: message envelope format, auth/pairing flow, cipher negotiation, key exchange method |
+| **P2P Protocol Version** | `CoLinkP2P/websocket/README.md` top | `protocol.hello` → `protocolVersion` | Transport-layer handshake: message envelope format, auth/pairing flow, cipher negotiation, key exchange method |
 | **Business Protocol Version** | `CoLinkBusiness/README.md` top | `business.v1.version` → `businessVersion` | Application-layer messages: text, clipboard, file transfer, music sync, system info |
 
-The `v1` in message type names (e.g. `business.v1.version`, `auth.v1.challenge`) is a message schema major version. It is part of the message type string, but it is not the same thing as the advertised LAN or Business semver. Each document defines which advertised version governs a message. For example, `business.v1.key-exchange` is part of the LAN encrypted-session setup and is governed by the LAN Protocol Version.
+The `v1` in message type names (e.g. `business.v1.version`, `auth.v1.challenge`) is a message schema major version. It is part of the message type string, but it is not the same thing as the advertised P2P or Business semver. Each document defines which advertised version governs a message. For example, `business.v1.key-exchange` is part of the P2P encrypted-session setup and is governed by the P2P Protocol Version.
 
 **Version compatibility rules** are defined independently by each protocol (see respective documents).
 

@@ -145,7 +145,7 @@ Direct observation follows the same incarnation comparison rules — it cannot o
 
 #### Incarnation Rules
 
-Incarnation is the node's own UTC millisecond timestamp at the moment it produces a state declaration. Only the node itself ever generates a new incarnation value — other nodes merely relay the last known value when reporting suspect/dead.
+Incarnation is the node's own UTC millisecond timestamp at the moment it produces a state declaration. Only the node itself ever generates a new incarnation value — other nodes merely relay the last known value when reporting suspect/dead. To guard against clock regression (e.g. NTP corrections), implementations MUST ensure monotonicity: `incarnation = max(lastKnownOwnIncarnation + 1, utcNowMillis)`.
 
 **Comparison:**
 - Higher incarnation always overrides lower incarnation, regardless of state.
@@ -154,7 +154,7 @@ Incarnation is the node's own UTC millisecond timestamp at the moment it produce
 - `left` at incarnation N cannot be overridden by suspect/dead at incarnation N.
 - Any state at incarnation N+1 overrides any state at incarnation N.
 
-**Refutation:** When a node receives gossip marking itself as `suspect`, it broadcasts `alive` with `incarnation = utcNowMillis` (guaranteed higher), refuting the suspicion.
+**Refutation:** When a node receives gossip marking itself as `suspect`, it broadcasts `alive` with a new incarnation (computed per the monotonicity rule above), refuting the suspicion.
 
 **Suspect/dead propagation:** When node A suspects node B, A gossips `{deviceId: "B", state: "suspect", incarnation: <B's last known incarnation>}`. A does not generate a new incarnation for B — it reuses whatever value B last declared.
 

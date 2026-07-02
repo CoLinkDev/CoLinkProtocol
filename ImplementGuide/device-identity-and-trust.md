@@ -9,7 +9,7 @@ This guide describes how clients should implement device identity management, cl
 | Device Identity | A locally-generated profile that uniquely identifies a device, including its cryptographic key pair and metadata. See [Section 1](#1-device-identity-generation) for full details. |
 | Trust Record | A locally-stored record representing a known remote peer and the basis on which it is trusted. See [Section 4](#4-trust-state) for schema. |
 | Cloud Sync | The bidirectional process of pushing local device identity to the server and pulling the account's device list from the server. |
-| LAN Pairing | The process of establishing mutual trust between two devices via LAN handshake with user-confirmed pairing code. See [CoLinkLAN/websocket/pairing.md](../CoLinkLAN/websocket/pairing.md) for protocol details. |
+| LAN Pairing | The process of establishing mutual trust between two devices via LAN handshake with user-confirmed pairing code. See [CoLinkP2P/websocket/pairing.md](../CoLinkP2P/websocket/pairing.md) for protocol details. |
 | Device List | The merged, deduplicated list of all known devices presented to the user, combining multiple sources. |
 
 ## 1. Device Identity Generation

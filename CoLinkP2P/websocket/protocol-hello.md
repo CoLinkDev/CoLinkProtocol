@@ -11,7 +11,7 @@ After a WebSocket connection is established, both sides simultaneously send a `p
   "type": "protocol.hello",
   "payload": {
     "deviceId": "660e8400-...",
-    "protocolVersion": "1.1.0",
+    "protocolVersion": "1.2.0",
     "extensions": {}
   }
 }

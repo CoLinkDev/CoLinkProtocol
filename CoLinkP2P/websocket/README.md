@@ -1,6 +1,6 @@
 # P2P WebSocket Protocol
 
-> **Current Protocol Version: 1.1.0**
+> **Current Protocol Version: 1.2.0**
 >
 > This protocol uses semantic versioning. The version is exchanged during `protocol.hello` and governs compatibility between peers.
 > The `protocolVersion` field follows [Semantic Versioning](https://semver.org/):
@@ -136,8 +136,12 @@ Type namespaces:
                             │
               ┌─────────────┴─────────────────────────┐
               │ Both protocolVersion >= 1.1.0?         │
-              │   Yes ──→ business.v1.key-exchange     │
-              │   No  ──→ skip (legacy derivation)    │
+              │   Yes ──→ encrypted key setup          │
+              │          • >= 1.2.0: nonce exchange    │
+              │            then key exchange           │
+              │          • 1.1.x: timestamp key        │
+              │            exchange                    │
+              │   No  ──→ skip (legacy derivation)     │
               └─────────────┬─────────────────────────┘
                             │
                             ▼

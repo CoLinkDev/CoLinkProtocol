@@ -73,6 +73,13 @@ A                                              B
 │─── business.v1.version-ack ───────────────────→ │  { compatible: true }
 │←── business.v1.version-ack ───────────────────  │  { compatible: true }
 │                                                 │
+│  ┌─ If both protocolVersion >= 1.2.0 ────────┐  │
+│  │                                           │  │
+│  │─── business.v1.key-exchange-nonce ──────→ │  │  { nonce }
+│  │←── business.v1.key-exchange-nonce ─────── │  │  { nonce }
+│  │                                           │  │
+│  └───────────────────────────────────────────┘  │
+│                                                 │
 │  ┌─ If both protocolVersion >= 1.1.0 ────────┐  │
 │  │                                           │  │
 │  │─── business.v1.key-exchange ────────────→ │  │  { ephemeralPublicKey, signature }
@@ -83,15 +90,58 @@ A                                              B
 │      ═══ Proceed to cipher negotiation ═══      │
 ```
 
-Both sides MUST complete version exchange (including acks) before proceeding. If both peers' `protocolVersion` is >= 1.1.0, ephemeral key exchange follows (see below); otherwise proceed directly to cipher negotiation. A side that sends or receives `compatible: false` MUST NOT proceed. The connection remains open.
+Both sides MUST complete version exchange (including acks) before proceeding. A side that sends or receives `compatible: false` MUST NOT proceed. The connection remains open.
 
 ## Encrypted Session
 
+The **effective protocol version** for a connection is `min(A.protocolVersion, B.protocolVersion)`. All version-dependent behavior in this section is determined by the effective protocol version.
+
+### Key Exchange Nonce (business.v1.key-exchange-nonce)
+
+When the effective protocol version is >= 1.2.0, both sides MUST exchange a per-connection nonce before `business.v1.key-exchange`. The nonce binds the later ephemeral key signature to this specific connection without relying on synchronized system clocks.
+
+When the effective protocol version is >= 1.1.0 and < 1.2.0, this phase is skipped. The key exchange proceeds using the timestamp-bound signature defined below.
+
+#### Message Definition
+
+**business.v1.key-exchange-nonce:**
+
+```json
+{
+  "type": "business.v1.key-exchange-nonce",
+  "payload": {
+    "nonce": "base64(32 random bytes)"
+  },
+  ...
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| nonce | string | A freshly generated random nonce for this connection only (base64-encoded, 32 bytes) |
+
+Both sides send this message simultaneously. A receiver MUST store the peer nonce for the current connection only. Nonces MUST NOT be reused across connections or persisted to storage.
+
+#### Flow
+
+```
+A                                              B
+│                                              │
+│─── business.v1.key-exchange-nonce ─────────→ │  { nonce_a }
+│←── business.v1.key-exchange-nonce ────────── │  { nonce_b }
+│                                              │
+│  Both keep local and peer nonces for the     │
+│  following business.v1.key-exchange          │
+│                                              │
+```
+
 ### Ephemeral Key Exchange (business.v1.key-exchange)
 
-When both peers' `protocolVersion` is >= 1.1.0, both sides perform an ephemeral key exchange before cipher negotiation. This provides **forward secrecy**: even if a device's long-term Ed25519 private key is later compromised, past session traffic cannot be decrypted.
+When the effective protocol version is >= 1.1.0, both sides perform an ephemeral key exchange before cipher negotiation. This provides **forward secrecy**: even if a device's long-term Ed25519 private key is later compromised, past session traffic cannot be decrypted.
 
-When either peer's `protocolVersion` is < 1.1.0, this phase is skipped — proceed directly to Negotiation. The higher-version peer degrades gracefully: the connection still functions using the legacy key derivation path, without forward secrecy.
+When the effective protocol version is >= 1.2.0, the key exchange signature uses the nonce-bound signature input defined below. When the effective protocol version is >= 1.1.0 and < 1.2.0, the key exchange uses the timestamp-bound signature input defined below.
+
+When the effective protocol version is < 1.1.0, this phase is skipped — proceed directly to Negotiation. The higher-version peer degrades gracefully: the connection still functions using the legacy key derivation path, without forward secrecy.
 
 #### Message Definition
 
@@ -113,13 +163,21 @@ When either peer's `protocolVersion` is < 1.1.0, this phase is skipped — proce
 | ephemeralPublicKey | string | A freshly generated X25519 public key for this connection only (base64-encoded, 32 bytes) |
 | signature | string | Ed25519 signature over the canonical string below, using the sender's long-term identity key (base64-encoded, 64 bytes) |
 
-**Signature canonical string:**
+**Signature canonical string for effective protocol version >= 1.2.0:**
+
+```
+domain=colink-lan-key-exchange-v2\nfrom=<envelope.from>\nto=<envelope.to>\nephemeralPublicKey=<base64 of ephemeral public key>\nlocalNonce=<sender's nonce from business.v1.key-exchange-nonce>\npeerNonce=<receiver's nonce from business.v1.key-exchange-nonce>
+```
+
+This signature binds the ephemeral key to the sender's long-term identity, the specific peer pair (`from`/`to` device IDs), and both per-connection nonces. A replayed key exchange from another connection will not verify because it does not contain the receiver's current nonce.
+
+**Signature canonical string for effective protocol version >= 1.1.0 and < 1.2.0:**
 
 ```
 domain=colink-lan-key-exchange\nfrom=<envelope.from>\nto=<envelope.to>\nephemeralPublicKey=<base64 of ephemeral public key>\ntimestamp=<envelope.timestamp>
 ```
 
-The signature binds the ephemeral key to the sender's long-term identity, the specific peer pair (`from`/`to` device IDs), and a timestamp, preventing replay attacks, key substitution, and cross-connection reuse.
+This legacy signature binds the ephemeral key to the sender's long-term identity, the specific peer pair (`from`/`to` device IDs), and a timestamp, preventing replay attacks, key substitution, and cross-connection reuse within the timestamp acceptance window.
 
 **business.v1.key-exchange-reject:**
 
@@ -166,9 +224,10 @@ A                                              B
 Both sides send simultaneously. Upon receiving the peer's message, each side:
 
 1. Verifies `signature` using the peer's long-term Ed25519 public key (from the trust record established during auth/pairing).
-2. Verifies that `timestamp` is within ±30 seconds of local time.
-3. If verification fails, sends `business.v1.key-exchange-reject` with an appropriate reason. The key exchange fails and encrypted business messages are unavailable for this connection.
-4. On success, computes the shared secret from ephemeral keys (see Key Derivation below).
+2. If the effective protocol version is >= 1.2.0, verifies the nonce-bound signature input using the local nonce and the peer nonce from `business.v1.key-exchange-nonce`.
+3. If the effective protocol version is >= 1.1.0 and < 1.2.0, verifies that `timestamp` is within ±30 seconds of local time and verifies the timestamp-bound signature input.
+4. If verification fails, sends `business.v1.key-exchange-reject` with an appropriate reason. The key exchange fails and encrypted business messages are unavailable for this connection.
+5. On success, computes the shared secret from ephemeral keys (see Key Derivation below).
 
 #### Rules
 
@@ -176,6 +235,8 @@ Both sides send simultaneously. Upon receiving the peer's message, each side:
 2. Implementations MUST NOT reuse an ephemeral key pair across connections.
 3. The ephemeral public key in `payload` MUST match the key used for ECDH in key derivation.
 4. The long-term Ed25519 key used for signing MUST be the same key authenticated during `auth.v1` or established during `pairing.v1`.
+5. When the effective protocol version is >= 1.2.0, both peers MUST complete `business.v1.key-exchange-nonce` before accepting `business.v1.key-exchange`.
+6. When the effective protocol version is >= 1.1.0 and < 1.2.0, peers MUST NOT send `business.v1.key-exchange-nonce` and MUST use the timestamp-bound signature behavior.
 
 ### Negotiation
 

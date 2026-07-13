@@ -14,7 +14,7 @@ No authentication required.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| platform | string | yes | `android` or `windows` (query parameter) |
+| platform | string | yes | `android`, `windows`, or `linux` (query parameter) |
 | version | string | no | Current client version (query parameter). `v1.2.3` and `1.2.3` are both accepted. |
 
 If `version` is omitted, the latest release for the platform is returned when one exists.

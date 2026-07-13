@@ -14,7 +14,7 @@ No authentication required.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| platform | string | `android` or `windows` (path parameter) |
+| platform | string | `android`, `windows`, or `linux` (path parameter) |
 | version | string | Release version (path parameter) |
 | filename | string | Asset file name (path parameter) |
 

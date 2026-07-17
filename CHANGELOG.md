@@ -2,6 +2,15 @@
 
 <!-- This changelog is provided solely to trace protocol changes and is not a normative protocol specification. For the actual protocol requirements, read the referenced protocol documents. -->
 
+## Server Protocol
+
+### 2026-07-17
+
+- **Cloud WebSocket Envelope: `correlationId` field (`CoLinkServerRESTAPI/websocket/v1.md`)**
+  - **New field:** The cloud WebSocket message envelope adds an optional `correlationId` (string or null). When present on `relay` or `broadcast` messages, the server transparently passes it through to the recipient without interpretation.
+  - **Purpose:** Enables request-response correlation over cloud relay, aligning with the P2P envelope's existing `correlationId` field. Used by `fs.v1.download` to associate an incoming `file.v2.offer` with the originating download request.
+  - **Compatibility:** The field is optional and defaults to `null`. Existing clients that do not send or read `correlationId` are unaffected.
+
 ## P2P Protocol
 
 ### v1.2.0 — 2026-07-02

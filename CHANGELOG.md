@@ -29,6 +29,14 @@
 
 ## Business Protocol
 
+### v1.4.0 — 2026-07-17
+
+- **Remote Filesystem Browse (`CoLinkBusiness/filesystem.md`)**
+  - **Messages:** Adds `fs.v1.roots` / `fs.v1.roots-result` (enumerate drives/mount points), `fs.v1.list` / `fs.v1.list-result` (paginated single-level directory listing), `fs.v1.stat` / `fs.v1.stat-result` (single-path metadata query), `fs.v1.download` (request host to initiate `file.v2.offer` for a specified file), and `fs.v1.error` (structured error response for any fs request).
+  - **Interaction model:** Request-response — the requester queries, the host replies. No subscription or push mechanism.
+  - **Download integration:** `fs.v1.download` causes the host to become the sender in a standard file transfer v2 session; no new data transport is introduced.
+  - **Compatibility:** Requires Business Protocol Version ≥ 1.4.0. Requesters MUST check the peer's advertised version before sending `fs.v1.*` messages. Hosts below 1.4.0 ignore unknown message types per existing rules.
+
 ### v1.3.0 — 2026-06-27
 
 - **File Checksum Algorithm Versioning (`CoLinkBusiness/file-transfer-v2.md`)**

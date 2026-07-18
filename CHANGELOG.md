@@ -29,6 +29,16 @@
 
 ## Business Protocol
 
+## Business Protocol
+
+### v1.5.0 — 2026-07-19
+
+- **Remote System Control (`CoLinkBusiness/system-control.md`)**
+  - **Message:** Adds `system-control.v1.command` (controller → host, fire-and-forget). `payload.action` is one of `sleep`, `shutdown`, or `lock`.
+  - **Interaction model:** One-way only — no response message is defined. The host executes the action immediately upon receipt. User confirmation is an application-layer concern.
+  - **Forward compatibility:** Hosts MUST silently ignore unrecognized `action` values to allow future actions to be added without a version bump.
+  - **Compatibility:** Requires Business Protocol Version ≥ 1.5.0. Controllers MUST check the peer's advertised version before sending `system-control.v1.*` messages. Hosts below 1.5.0 ignore unknown message types per existing rules.
+
 ### v1.4.0 — 2026-07-17
 
 - **Remote Filesystem Browse (`CoLinkBusiness/filesystem.md`)**

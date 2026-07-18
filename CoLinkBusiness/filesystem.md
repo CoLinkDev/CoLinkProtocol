@@ -161,7 +161,6 @@ Request the contents of a directory.
 
 ### Notes
 
-- Entries SHOULD be sorted: directories first, then files, each group sorted alphabetically by name (case-insensitive)
 - The host MUST NOT recurse into subdirectories
 - The host MUST NOT compute directory sizes (return `null`)
 - For symlinks, `size` and `modified` SHOULD reflect the link target when resolvable; otherwise `null`

@@ -29,6 +29,15 @@
 
 ## Business Protocol
 
+### v1.6.0 — 2026-07-19
+
+- **Media Playback and Volume Controls (`CoLinkBusiness/system-control.md`)**
+  - **Extended actions:** Adds six new `action` values to `system-control.v1.command`: `play`, `pause`, `next`, `previous`, `set-volume`, and `mute`.
+  - **New field:** `volume` (integer, 0–100) added to the payload. Required when `action` is `set-volume`; MUST be `null` or omitted for all other actions.
+  - **Semantics:** Media playback actions target the active system media session and are best-effort — the host MUST silently ignore them if no controllable session exists. `mute` silences output; System volume refers to the host OS master volume, not per-application volume.
+  - **Forward compatibility:** The existing rule requiring hosts to silently ignore unrecognized `action` values already covers old peers receiving these new actions.
+  - **Compatibility:** Controllers MUST check that the peer's advertised Business Protocol Version is ≥ 1.6.0 before sending any of the new actions. Hosts below 1.6.0 ignore unknown message types per existing rules.
+
 ## Business Protocol
 
 ### v1.5.0 — 2026-07-19

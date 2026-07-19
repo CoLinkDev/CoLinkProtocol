@@ -29,6 +29,16 @@
 
 ## Business Protocol
 
+### v1.7.0 — 2026-07-19
+
+- **System State Query (`CoLinkBusiness/system-control.md`)**
+  - **New messages:** Adds `system-control.v1.query` (controller → host), `system-control.v1.result` (host → controller), and `system-control.v1.error` (host → controller).
+  - **Interaction model:** Request-response — the controller sends a query with a `fields` array, the host replies with a `result` containing only the recognized and requested fields, or an `error` if the query cannot be fulfilled. The `correlationId` in the result/error envelope references the originating query envelope `id`.
+  - **Queryable fields:** `volume` (integer 0–100 or null), `muted` (boolean or null), `playback` (`"playing"` / `"paused"` / `"stopped"` or null). A field that cannot be determined MUST be reported as `null`.
+  - **Unknown fields:** The host MUST silently ignore unrecognized field names in `fields` and return only fields it recognizes. If all fields are unrecognized, the host returns an empty result payload.
+  - **Error reasons:** `colink:system-control.query_failed.v1`, `colink:system-control.invalid_request.v1`, `colink:system-control.generic.v1`.
+  - **Compatibility:** Requires Business Protocol Version ≥ 1.7.0. Controllers MUST check the peer's advertised version before sending a query. Hosts below 1.7.0 silently ignore the unknown message type per existing rules.
+
 ### v1.6.0 — 2026-07-19
 
 - **Media Playback and Volume Controls (`CoLinkBusiness/system-control.md`)**

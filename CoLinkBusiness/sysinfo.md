@@ -67,3 +67,9 @@ No payload fields required.
 - Receivers SHOULD send at a fixed interval (recommended: 5s)
 - Source SHOULD stop pushing data to a receiver if no `alive` message is received from that receiver within a timeout period (recommended: 15s)
 - Source SHOULD resume fixed-interval pushes to a receiver when a new `alive` message arrives from that receiver
+
+## Version Compatibility
+
+- `sysinfo.v1.stats` and `sysinfo.v1.alive` require Business Protocol Version 1.1.0 or later. A source MUST verify that the receiver's advertised `businessVersion` is valid, has the same major version, and is at least 1.1.0 before beginning the heartbeat and push flow. If the version is missing, malformed, incompatible, or too old, the source MUST NOT send these messages.
+- `net_up`, `net_down`, `disk_read`, and `disk_write` were introduced in Version 1.2.0. A receiver supporting Version 1.2.0 or later MUST accept these fields when omitted and treat each omitted field as unavailable (`null`).
+- A source MAY include the Version 1.2.0 fields when sending to an older receiver. An older receiver silently ignores those unknown fields and the source MUST NOT depend on the receiver consuming them.

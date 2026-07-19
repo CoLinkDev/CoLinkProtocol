@@ -28,3 +28,9 @@ The business version is exchanged differently depending on the transport:
 
 - **P2P**: `business.v1.version` / `business.v1.version-ack` signaling messages after auth/pairing, before cipher negotiation. See `CoLinkP2P/websocket/business.md`.
 - **Cloud Relay**: Reported via WebSocket query parameter `businessVersion` on connect and distributed through `device.online` events. See `CoLinkServerRESTAPI/websocket/v1.md`.
+
+## Forward Compatibility
+
+- A receiver MUST silently ignore a Business message whose `type` it does not recognize. It MUST NOT close the transport connection or send an error solely because the message type is unknown.
+- A receiver MUST ignore unknown fields in a recognized Business message unless that message's specification explicitly requires rejection for the field. Unknown fields MUST NOT alter the interpretation of recognized fields.
+- When adding a new message type, action value, or field value, its document MUST define the minimum Business Protocol Version and the sender and receiver behavior for peers that predate it.

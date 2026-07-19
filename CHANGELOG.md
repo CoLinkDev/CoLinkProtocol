@@ -36,7 +36,7 @@
   - **New field:** `volume` (integer, 0–100) added to the payload. Required when `action` is `set-volume`; MUST be `null` or omitted for all other actions.
   - **Semantics:** Media playback actions target the active system media session and are best-effort — the host MUST silently ignore them if no controllable session exists. `mute` silences output; System volume refers to the host OS master volume, not per-application volume.
   - **Forward compatibility:** The existing rule requiring hosts to silently ignore unrecognized `action` values already covers old peers receiving these new actions.
-  - **Compatibility:** Controllers MUST check that the peer's advertised Business Protocol Version is ≥ 1.6.0 before sending any of the new actions. Hosts below 1.6.0 ignore unknown message types per existing rules.
+  - **Compatibility:** Controllers MUST check that the peer's advertised Business Protocol Version is ≥ 1.6.0 before sending any of the new actions. A Version 1.5.0 host recognizes the message type but silently ignores the new unrecognized `action` values, including `volume`; hosts below Version 1.5.0 encounter the entire command as an unknown message type. Version 1.6.0 hosts continue to accept Version 1.5.0 power commands without `volume`.
 
 ## Business Protocol
 

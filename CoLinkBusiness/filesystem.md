@@ -305,5 +305,5 @@ Sent by the host when a request cannot be fulfilled.
 ## Version Compatibility
 
 - Peers advertising Business Protocol Version < 1.4.0 do not support `fs.v1.*` messages
-- A requester MUST check the peer's advertised `businessVersion` before sending `fs.v1.*` messages; if the peer's version is below 1.4.0, the requester MUST NOT send these messages
-- If a host with version < 1.4.0 receives an unknown `fs.v1.*` message, it ignores it per the standard unknown-message handling rule
+- Before sending `fs.v1.*`, a requester MUST verify that the target's advertised `businessVersion` is valid, has the same major version, and is at least 1.4.0. If the version is missing, malformed, incompatible, or too old, the requester MUST NOT send these messages.
+- A host that predates Version 1.4.0 treats an incoming `fs.v1.*` message as an unknown Business message and silently ignores it according to the standard forward-compatibility rule.

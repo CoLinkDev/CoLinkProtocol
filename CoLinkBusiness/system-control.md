@@ -54,3 +54,10 @@ A controller device sends a one-way command to request the host device to perfor
 - The host MUST silently ignore `system-control.v1.command` messages with an unrecognized `action` value to allow forward-compatible extension
 - The host SHOULD NOT send this message type; the direction is controller → host only
 - Media playback actions (`play`, `pause`, `next`, `previous`) are best-effort: the host SHOULD execute them against the active system media session where available and MUST silently ignore the command if no controllable session exists
+
+## Version Compatibility
+
+- `sleep`, `shutdown`, and `lock` require Business Protocol Version 1.5.0 or later. `play`, `pause`, `next`, `previous`, `set-volume`, and `mute` require Version 1.6.0 or later.
+- Before sending a command, a controller MUST verify that the target's advertised `businessVersion` is valid, has the same major version, and is at least the version required by the selected action. If the version is missing, malformed, has a different major version, or is too old, the controller MUST NOT send the command.
+- A host that recognizes `system-control.v1.command` but does not recognize its `action` value MUST silently ignore the entire command. The presence of unknown fields MUST NOT cause that host to reject the command.
+- A host supporting Version 1.6.0 or later MUST accept Version 1.5.0 power commands with `action` set to `sleep`, `shutdown`, or `lock` and with `volume` omitted.

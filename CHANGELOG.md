@@ -29,6 +29,14 @@
 
 ## Business Protocol
 
+### v1.8.0 — 2026-07-20
+
+- **Wake-on-LAN (`CoLinkBusiness/system-control.md`)**
+  - **New action:** Adds `wake-on-lan` to `system-control.v1.command`. The receiving device acts as a proxy and broadcasts a standard WOL magic packet (UDP port 9) to its local network.
+  - **New field:** `targetMac` (string or null) added to the command payload. Required when `action` is `wake-on-lan`; MUST be `null` or omitted for all other actions. Format: `XX:XX:XX:XX:XX:XX` (hexadecimal, case-insensitive).
+  - **Invalid input handling:** The host MUST silently ignore the command if `targetMac` is absent, `null`, or does not match the expected format.
+  - **Compatibility:** Requires Business Protocol Version ≥ 1.8.0. Controllers MUST check the peer's advertised version before sending `wake-on-lan`. Hosts below 1.8.0 silently ignore the unknown action value per existing rules.
+
 ### v1.7.0 — 2026-07-19
 
 - **System State Query (`CoLinkBusiness/system-control.md`)**

@@ -29,6 +29,18 @@
 
 ## Business Protocol
 
+### v1.9.0 — 2026-07-21
+
+- **Remote Terminal Control (`CoLinkBusiness/terminal.md`)**
+  - **Messages:** Adds `terminal.v1.open` (controller → host), `terminal.v1.open-ack` (host → controller), `terminal.v1.data` (bidirectional), `terminal.v1.resize` (controller → host), and `terminal.v1.close` (bidirectional).
+  - **Session model:** Each session is identified by a controller-generated UUIDv4 `sessionId`. Multiple sessions MAY be multiplexed over a single connection simultaneously.
+  - **Byte stream:** `terminal.v1.data` carries Base64-encoded raw PTY bytes. The controller sends `stream: "input"`; the host sends `stream: "output"`. stdout and stderr are merged by the PTY kernel buffer and cannot be distinguished at the protocol layer.
+  - **PTY resize:** `terminal.v1.resize` delivers new `cols`/`rows` to the host PTY (`TIOCSWINSZ`), causing `SIGWINCH` to be delivered to the shell process.
+  - **Session close:** Either side MAY send `terminal.v1.close`. When the controller closes, the host MUST terminate the session's managed process tree. Processes that have detached via `nohup`/`disown` are unaffected.
+  - **Connection disconnect:** When the underlying transport closes, the host MUST terminate all active session processes and their managed process trees. In cloud-relay deployments, receiving `device.offline` for the controller is treated as equivalent to a disconnect. No `terminal.v1.close` messages are exchanged for implicitly closed sessions.
+  - **Env overrides:** `terminal.v1.open` accepts an optional `env` map. Only `TERM`, `LANG`, and `LC_ALL` are applied; all other keys are silently ignored.
+  - **Compatibility:** Requires Business Protocol Version ≥ 1.9.0. Controllers MUST check the peer's advertised version before sending `terminal.v1.*` messages. Hosts below 1.9.0 ignore unknown message types per existing rules.
+
 ### v1.8.0 — 2026-07-20
 
 - **Wake-on-LAN (`CoLinkBusiness/system-control.md`)**

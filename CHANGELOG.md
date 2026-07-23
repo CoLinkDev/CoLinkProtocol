@@ -29,6 +29,17 @@
 
 ## Business Protocol
 
+### v1.10.0 — 2026-07-23
+
+- **Remote Camera Stream (`CoLinkBusiness/camera.md`)**
+  - **Messages:** Adds `camera.v1.list` / `camera.v1.list-result` (enumerate cameras), `camera.v1.open` / `camera.v1.open-ack` (open a streaming session), `camera.v1.ready` (confirm LAN or relay transport), `camera.v1.alive` (controller liveness heartbeat), `camera.v1.config` / `camera.v1.config-ack` (mid-session parameter adjustment), `camera.v1.close` (bidirectional session close), and `camera.v1.frame` (relay-mode video frame).
+  - **Transport:** Control plane uses the existing encrypted business channel. The host offers LAN by including a one-time `streamToken`; the controller confirms the final route with `camera.v1.ready`, falling back to relay if its LAN connection attempt fails. LAN frames use a dedicated binary WebSocket at `/camera-stream/{sessionId}?token={streamToken}`; relay frames use `camera.v1.frame` JSON messages on the main WebSocket.
+  - **Codec negotiation:** The controller offers an ordered `preferredCodecs` list at open time; the host selects `negotiatedCodec`. Binary frame headers carry a `codec` field for self-description. Defined codec values: `0x01=jpeg`, `0x02=h264`, `0x03=webp`. H.264 payloads use Annex B and carry one complete access unit per protocol frame; keyframes include the parameter sets required for independent decoding. Future codecs require a minor version bump.
+  - **Alive-controlled streaming:** The host streams only while the controller sends `camera.v1.alive` heartbeats (recommended: every 5s). The host stops streaming after 15s without a heartbeat and resumes when a new heartbeat arrives.
+  - **Camera enumeration:** `camera.v1.list-result` returns `cameraId`, `label`, `position` (`front`/`back`/`external`/`null`), and `capabilities` (`resolutions` array + `fpsRange`).
+  - **Mid-session reconfiguration:** `camera.v1.config` adjusts `width`, `height`, and/or `fps`; host responds with `camera.v1.config-ack` containing the actual applied values.
+  - **Compatibility:** Requires Business Protocol Version ≥ 1.10.0. Controllers MUST check the peer's advertised version before sending `camera.v1.*` messages. Hosts below 1.10.0 silently ignore unknown message types per existing rules.
+
 ### v1.9.0 — 2026-07-21
 
 - **Remote Terminal Control (`CoLinkBusiness/terminal.md`)**

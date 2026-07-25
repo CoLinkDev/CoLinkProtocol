@@ -29,6 +29,13 @@
 
 ## Business Protocol
 
+### v1.11.0 — 2026-07-25
+
+- **Delayed Power Actions and Cancellation (`CoLinkBusiness/system-control.md`)**
+  - **New field:** `delay` (integer or null) added to `system-control.v1.command`. Applicable only to `sleep`, `shutdown`, and `lock`; the host MUST silently ignore it for all other actions. A non-negative integer specifies the number of seconds to wait before executing the action; `null` or omitted means execute immediately (equivalent to `0`). If a negative value is received, the host MUST treat it as `0`.
+  - **New action:** `cancel-power` cancels the most recently scheduled delayed power action on the current connection. If no delayed action is pending, the host MUST silently ignore the command. Only one delayed power action may be pending per connection at a time; a new delayed command replaces any existing pending one.
+  - **Compatibility:** Requires Business Protocol Version ≥ 1.11.0. Controllers MUST check the peer's advertised version before sending a non-null `delay` or a `cancel-power` command. Hosts below 1.11.0 silently ignore the unknown `cancel-power` action value and the unknown `delay` field per existing forward-compatibility rules.
+
 ### v1.10.0 — 2026-07-23
 
 - **Remote Camera Stream (`CoLinkBusiness/camera.md`)**

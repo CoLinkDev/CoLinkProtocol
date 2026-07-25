@@ -9,7 +9,7 @@ A controller device sends a one-way command to request the host device to perfor
 A controller may also query the host's current system state using a request-response pair. The host replies with the requested field values, or an error if the query cannot be fulfilled.
 
 - Commands are fire-and-forget: the controller MUST NOT expect a reply
-- The host MUST execute the requested action without delay upon receipt
+- The host MUST execute the requested action after the delay specified in the command (default: immediately)
 - Whether to prompt the user for confirmation before sending is an application-layer concern
 - Queries use `correlationId` to associate the result or error with the originating request
 
@@ -31,6 +31,7 @@ A controller may also query the host's current system state using a request-resp
   "type": "system-control.v1.command",
   "payload": {
     "action": "sleep",
+    "delay": null,
     "volume": null,
     "targetMac": null
   }
@@ -40,6 +41,7 @@ A controller may also query the host's current system state using a request-resp
 | Field     | Type           | Description          |
 |-----------|----------------|----------------------|
 | action    | string         | The action to perform. See [Actions](#actions). |
+| delay     | integer / null | Seconds to wait before executing the action. MUST be `null` or omitted for all actions except `sleep`, `shutdown`, and `lock`. For those actions, MUST be a non-negative integer when present; `null` or omitted means execute immediately (equivalent to `0`). |
 | volume    | integer / null | Required when `action` is `set-volume` (0–100 inclusive). MUST be `null` or omitted for all other actions. |
 | targetMac | string / null  | Required when `action` is `wake-on-lan`. MUST be `null` or omitted for all other actions. Format: `XX:XX:XX:XX:XX:XX` (hexadecimal, case-insensitive). |
 
@@ -50,6 +52,7 @@ A controller may also query the host's current system state using a request-resp
 | `sleep`        | Suspend the host to sleep / low-power state              |
 | `shutdown`     | Power off the host                                       |
 | `lock`         | Lock the host screen / user session                      |
+| `cancel-power` | Cancel a pending delayed `sleep`, `shutdown`, or `lock` action. If no such action is pending, the host MUST silently ignore this command. |
 | `play`         | Resume media playback on the host                        |
 | `pause`        | Pause media playback on the host                         |
 | `next`         | Skip to the next track                                   |
@@ -64,6 +67,8 @@ A controller may also query the host's current system state using a request-resp
 - The host SHOULD NOT send this message type; the direction is controller → host only
 - Media playback actions (`play`, `pause`, `next`, `previous`) are best-effort: the host SHOULD execute them against the active system media session where available and MUST silently ignore the command if no controllable session exists
 - For `wake-on-lan`: the host MUST silently ignore the command if `targetMac` is absent, `null`, or does not match the format `XX:XX:XX:XX:XX:XX`
+- For `delay`: the host MUST silently ignore the `delay` field when `action` is not `sleep`, `shutdown`, or `lock`. If `delay` is a negative integer, the host MUST treat it as `0`. Only one power action with a delay may be pending at a time per connection; a new delayed command MUST replace any existing pending one.
+- For `cancel-power`: cancels the most recently scheduled delayed power action on the current connection, if any. The host MUST silently ignore this command if no delayed action is pending.
 
 ---
 
@@ -163,10 +168,11 @@ Sent by the host when the query cannot be fulfilled. The `correlationId` in the 
 
 ## Version Compatibility
 
-- `sleep`, `shutdown`, and `lock` require Business Protocol Version 1.5.0 or later. `play`, `pause`, `next`, `previous`, `set-volume`, and `mute` require Version 1.6.0 or later. `system-control.v1.query`, `system-control.v1.result`, and `system-control.v1.error` require Version 1.7.0 or later. `wake-on-lan` requires Version 1.8.0 or later.
+- `sleep`, `shutdown`, and `lock` require Business Protocol Version 1.5.0 or later. `play`, `pause`, `next`, `previous`, `set-volume`, and `mute` require Version 1.6.0 or later. `system-control.v1.query`, `system-control.v1.result`, and `system-control.v1.error` require Version 1.7.0 or later. `wake-on-lan` requires Version 1.8.0 or later. `delay` (on `sleep`, `shutdown`, `lock`) and `cancel-power` require Version 1.11.0 or later.
 - Before sending a command, a controller MUST verify that the target's advertised `businessVersion` is valid, has the same major version, and is at least the version required by the selected action. If the version is missing, malformed, has a different major version, or is too old, the controller MUST NOT send the command.
 - Before sending a query, a controller MUST verify that the target's advertised `businessVersion` is valid, has the same major version, and is at least 1.7.0. If the version requirement is not met, the controller MUST NOT send the query.
 - A host that recognizes `system-control.v1.command` but does not recognize its `action` value MUST silently ignore the entire command. The presence of unknown fields MUST NOT cause that host to reject the command.
 - A host supporting Version 1.6.0 or later MUST accept Version 1.5.0 power commands with `action` set to `sleep`, `shutdown`, or `lock` and with `volume` omitted.
 - Hosts below Version 1.7.0 encounter `system-control.v1.query` as an unknown message type and silently ignore it per existing forward-compatibility rules. Controllers MUST NOT send a query to such hosts.
 - Hosts below Version 1.8.0 encounter `wake-on-lan` as an unknown action value and silently ignore the command per existing forward-compatibility rules. Controllers MUST NOT send a `wake-on-lan` command to such hosts.
+- Hosts below Version 1.11.0 encounter `cancel-power` as an unknown action value and silently ignore the command. They also silently ignore the `delay` field in power commands per existing unknown-field rules. Controllers MUST NOT use `delay` or send `cancel-power` to hosts below Version 1.11.0.

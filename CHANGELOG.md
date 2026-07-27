@@ -4,6 +4,22 @@
 
 ## Server Protocol
 
+### 2026-07-27
+
+- **Push Notification API (`CoLinkServerRESTAPI/push/`)**
+  - **New endpoints:** Adds Bark-compatible push endpoints under `/api/push/`. Supports path-form (`/api/push/:deviceId/:title/:body`), POST form body, POST JSON with key in path, and POST JSON with key in body (`POST /api/push` with `device_key`). Batch push via `device_keys` array is also supported.
+  - **Target device and authentication:** `deviceId` identifies the target device; it is not a credential. Push endpoints require a Bearer token and accept pushes only to devices owned by the token's account.
+  - **Behavior:** The server delivers the notification via WebSocket and waits for a `notification.push-ack` before responding. Returns `2011 device offline` if the device has no active connection, `2012 push not supported` if the device lacks the Cloud WebSocket Protocol `1.1.0` Push capability, and `2013 push timeout` if no ACK is received within 10 seconds.
+
+- **Cloud WebSocket Protocol v1.1.0 (`CoLinkServerRESTAPI/websocket/v1.md`)**
+  - **Version axis:** Introduces the Cloud WebSocket Protocol Version, independently versioned from P2P and Business protocols. Clients advertise `wsVersion` through the WebSocket connection URL; absent or unparseable values are treated as `1.0.0`.
+  - **Compatibility:** Clients and the server require the same Cloud WebSocket major version. Within major version `1`, the server gates new capabilities by the target client's advertised minor version.
+  - **New `device.online` field:** `wsVersion` is included in the `device.online` payload so that other connected devices can observe a peer's WebSocket capabilities.
+
+- **`notification.push` and `notification.push-ack` messages (`CoLinkServerRESTAPI/websocket/v1.md`)**
+  - **New server→device message:** `notification.push` carries a push notification payload directly from the server to a target device. `from` is `null`. Only delivered to devices with the Cloud WebSocket Protocol `1.1.0` Push capability.
+  - **New device→server message:** `notification.push-ack` acknowledges receipt of a `notification.push`. `correlationId` references the push message `id`. The server resolves the pending HTTP request upon receiving the ACK.
+
 ### 2026-07-17
 
 - **Cloud WebSocket Envelope: `correlationId` field (`CoLinkServerRESTAPI/websocket/v1.md`)**

@@ -38,16 +38,17 @@ Each device generates a local identity on first launch. A device identity consis
 
 ## Versioning
 
-There are two independent version axes. They are bumped separately and serve different purposes:
+There are three independent version axes. They are bumped separately and serve different purposes:
 
 | Version | Where declared | Exchanged when | Governs |
 |---------|---------------|----------------|---------|
 | **P2P Protocol Version** | `CoLinkP2P/websocket/README.md` top | `protocol.hello` → `protocolVersion` | Transport-layer handshake: message envelope format, auth/pairing flow, cipher negotiation, key exchange method |
 | **Business Protocol Version** | `CoLinkBusiness/README.md` top | `business.v1.version` → `businessVersion` | Application-layer messages: text, clipboard, file transfer, music sync, system info |
+| **Cloud WebSocket Protocol Version** | `CoLinkServerRESTAPI/websocket/v1.md` top | WebSocket connection query parameter `wsVersion` | Cloud connection lifecycle, envelope, presence events, relay/broadcast behavior, and server-initiated WebSocket messages |
 
 The `vx` in message type names (e.g. `business.v1.version`, `auth.v1.challenge`) is a message schema major version. It is part of the message type string, but it is not the same thing as the advertised P2P or Business semver. Each document defines which advertised version governs a message. For example, `business.v1.key-exchange` is part of the P2P encrypted-session setup and is governed by the P2P Protocol Version.
 
-P2P and Business each follow their own semantic versioning rules declared in their respective READMEs. Modifying one protocol MUST NOT automatically bump the other.
+P2P, Business, and Cloud WebSocket each follow their own semantic versioning rules declared in their respective documents. Modifying one protocol MUST NOT automatically bump either of the others.
 
 ## Compatibility Rules
 

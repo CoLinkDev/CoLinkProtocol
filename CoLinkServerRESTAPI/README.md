@@ -9,6 +9,8 @@
 - Response envelope: `{ "code": 0, "data": {...}, "message": "ok" }`
 - Error envelope: `{ "code": <errorCode>, "data": null, "message": "description" }`
 
+Response body of `/api/push`  uses the Bark-compatible format documented in [`push/README.md`](push/README.md) instead of the common response envelope.
+
 ### Error Codes
 
 Code `0` = success. Positive codes are module-specific (defined in each API doc). Negative codes are global.

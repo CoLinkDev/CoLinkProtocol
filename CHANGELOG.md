@@ -29,6 +29,14 @@
 
 ## P2P Protocol
 
+### v1.3.0 — 2026-07-28
+
+- **Pair-String Pairing (`CoLinkP2P/websocket/pair-string.md`, `CoLinkP2P/websocket/pairing.md`)**
+  - **New format:** Adds the versioned `colink://pair/v1?data=<base64url(JSON UTF-8)>` pair string. It carries the receiver `deviceId`, Ed25519 public key, 32-byte CSPRNG token, and expiration. Endpoint discovery remains outside the pair string.
+  - **Token lifecycle:** Tokens are in-memory, one-time bearer credentials with `active → reserved → consumed` state. The recommended validity period is `PAIR_STRING_RECOMMENDED_TTL` (1 hour); tokens are invalidated by expiry, cancellation, failed pairing, restart, or identity-key rotation.
+  - **Automatic confirmation:** Adds optional `pairString` to `pairing.v1.request`. When both peers advertise P2P `1.3.0` or later and the receiver validates the token, the receiver sends the existing `pairing.v1.exchange` followed by `pairing.v1.confirm` without numeric-code confirmation. The initiator validates the receiver identity from hello and exchange before accepting confirm.
+  - **Compatibility and rejection:** Pair-string pairing and numeric-code pairing are mutually exclusive. Peers use the numeric-code flow whenever pair-string pairing is not selected. Adds `pair_string_invalid`, `pair_string_expired`, `pair_string_unavailable`, and `identity_mismatch` pairing reasons.
+
 ### v1.2.0 — 2026-07-02
 
 - **Nonce-Bound Ephemeral Key Exchange (`CoLinkP2P/websocket/business.md`)**

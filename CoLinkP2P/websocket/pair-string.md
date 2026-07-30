@@ -1,4 +1,6 @@
-# Pair String
+# Pair String v1
+
+> **Deprecated.** This document describes the v1 JSON-based format, retained for compatibility only. New implementations SHOULD use the [pair string v2](pair-string-v2.md) format instead.
 
 A pair string authorizes one first-time pairing attempt with a specific receiver. It carries the receiver identity and a short-lived one-time token. Its display, transfer, and input mechanisms are implementation concerns and are not defined by this protocol.
 

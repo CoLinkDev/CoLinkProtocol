@@ -1,6 +1,6 @@
 # P2P WebSocket Protocol
 
-> **Current Protocol Version: 1.3.0**
+> **Current Protocol Version: 1.4.0**
 >
 > This protocol uses semantic versioning. The version is exchanged during `protocol.hello` and governs compatibility between peers.
 > The `protocolVersion` field follows [Semantic Versioning](https://semver.org/):
@@ -87,7 +87,7 @@ Type namespaces:
 |-------|----------|
 | Version Negotiation | [protocol-hello.md](protocol-hello.md) |
 | Authentication | [auth.md](auth.md) |
-| Pairing | [pairing.md](pairing.md), [pair-string.md](pair-string.md) |
+| Pairing | [pairing.md](pairing.md), [pair-string.md](pair-string.md), [pair-string-v2.md](pair-string-v2.md) |
 | Business Messages | [business.md](business.md) |
 | Keepalive | [keepalive.md](keepalive.md) |
 

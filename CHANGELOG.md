@@ -29,6 +29,14 @@
 
 ## P2P Protocol
 
+### v1.4.0 — 2026-07-30
+
+- **Pair String v2 (`CoLinkP2P/websocket/pair-string-v2.md`)**
+  - **Format:** Binary fixed-layout (80 bytes), base64url encoded as `colink://pair/v2?d=<base64url>`. Fields: `deviceId` (16 B UUID raw bytes), Ed25519 `publicKey` (32 B), and `token` (32 B). No JSON overhead.
+  - **Removed fields:** `name`, `platform`, and `expiresAt` — reduces encoded pair string length from ~320 to ~126 characters. Token validity period is managed by the issuing implementation.
+  - **Identity binding:** The initiator validates both the receiver device ID and public key against the pair string before accepting automatic confirmation.
+  - **Compatibility:** v1 format remains valid and both formats MUST be supported by implementations advertising ≥1.4.0. v2 is used only when both peers advertise ≥1.4.0. An unsupported or invalid pair string is rejected with `pair_string_invalid` and ends that pairing attempt.
+
 ### v1.3.0 — 2026-07-28
 
 - **Pair-String Pairing (`CoLinkP2P/websocket/pair-string.md`, `CoLinkP2P/websocket/pairing.md`)**

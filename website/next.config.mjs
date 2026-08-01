@@ -6,16 +6,17 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 const repositoryRoot = fileURLToPath(new URL('../', import.meta.url));
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const config = {
   basePath,
-  output: 'export',
-  trailingSlash: true,
   images: {
     unoptimized: true,
   },
+  output: 'export',
+  reactStrictMode: true,
+  trailingSlash: true,
   turbopack: {
     root: repositoryRoot,
   },
 };
 
-export default withMDX(nextConfig);
+export default withMDX(config);

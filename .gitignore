@@ -2,3 +2,4 @@ website/.next/
 website/.source/
 website/node_modules/
 website/out/
+.website-pre-fumadocs/

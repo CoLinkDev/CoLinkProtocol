@@ -5,8 +5,7 @@ export const docs = defineDocs({
   dir: '..',
   docs: {
     files: [
-      'README.md',
-      'CHANGELOG.md',
+      '*.md',
       'ImplementGuide/**/*.md',
       'CoLinkBusiness/**/*.md',
       'CoLinkP2P/**/*.md',

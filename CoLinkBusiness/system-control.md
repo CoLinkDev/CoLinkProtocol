@@ -67,8 +67,8 @@ A controller may also query the host's current system state using a request-resp
 - The host SHOULD NOT send this message type; the direction is controller → host only
 - Media playback actions (`play`, `pause`, `next`, `previous`) are best-effort: the host SHOULD execute them against the active system media session where available and MUST silently ignore the command if no controllable session exists
 - For `wake-on-lan`: the host MUST silently ignore the command if `targetMac` is absent, `null`, or does not match the format `XX:XX:XX:XX:XX:XX`
-- For `delay`: the host MUST silently ignore the `delay` field when `action` is not `sleep`, `shutdown`, or `lock`. If `delay` is a negative integer, the host MUST treat it as `0`. Only one power action with a delay may be pending at a time per connection; a new delayed command MUST replace any existing pending one.
-- For `cancel-power`: cancels the most recently scheduled delayed power action on the current connection, if any. The host MUST silently ignore this command if no delayed action is pending.
+- For `delay`: the host MUST silently ignore the `delay` field when `action` is not `sleep`, `shutdown`, or `lock`. If `delay` is a negative integer, the host MUST treat it as `0`. Only one power action with a delay may be pending at a time; a new delayed command MUST replace any existing pending one.
+- For `cancel-power`: cancels the most recently scheduled delayed power action, if any. The host MUST silently ignore this command if no delayed action is pending.
 
 ---
 
@@ -96,7 +96,7 @@ Sent by the controller to request the current value of one or more system state 
 | `volume`        | Current system master volume (0–100) |
 | `muted`         | Whether system audio is muted |
 | `playback`      | Current media playback state |
-| `pending-power` | The currently pending delayed power action on this connection, if any |
+| `pending-power` | The currently pending delayed power action, if any |
 
 - The host MUST silently ignore unrecognized field names in `fields` and return only the fields it recognizes
 - If all requested fields are unrecognized, the host MUST return a `system-control.v1.result` with an empty payload object
@@ -130,7 +130,7 @@ Only fields that were both requested and recognized by the host are included in 
 | volume          | integer/null | Current system master volume, 0–100. `null` if unavailable. |
 | muted           | boolean/null | Whether system audio is currently muted. `null` if unavailable. |
 | playback        | string/null  | Current media playback state. One of `"playing"`, `"paused"`, `"stopped"`. `null` if no controllable media session exists or the state is unavailable. |
-| pending-power   | object/null  | The currently pending delayed power action on this connection. `null` if no delayed power action is pending. See [Pending Power Object](#pending-power-object). |
+| pending-power   | object/null  | The currently pending delayed power action. `null` if no delayed power action is pending. See [Pending Power Object](#pending-power-object). |
 
 ### Pending Power Object
 

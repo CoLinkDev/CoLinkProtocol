@@ -61,19 +61,23 @@
 
 ## Business Protocol
 
+### v1.12.1 — 2026-08-01
+
+- **Delayed Power Action Scope Clarification (`CoLinkBusiness/system-control.md`)**
+  - Removed connection-specific wording from delayed power scheduling, cancellation, and pending-power queries. This documentation clarification does not change the wire format.
+
 ### v1.12.0 — 2026-08-01
 
 - **Pending Power Query (`CoLinkBusiness/system-control.md`)**
-  - **New queryable field:** `pending-power` added to `system-control.v1.query`. Returns the currently pending delayed power action on the current connection as an object, or `null` if no delayed power action is pending.
+  - **New queryable field:** `pending-power` added to `system-control.v1.query`. Returns the currently pending delayed power action as an object, or `null` if no delayed power action is pending.
   - **Pending Power Object:** Contains `action` (one of `"sleep"`, `"shutdown"`, `"lock"`) and `remainingMs` (integer, milliseconds remaining until execution, minimum `0`). `remainingMs` is computed at the moment the host processes the query and clamped to `0`. If the action executes between computation and sending the result, the host SHOULD return `null`.
-  - **Scope:** Per-connection, consistent with the existing `cancel-power` semantics. Only delayed actions scheduled via the current connection are reflected.
   - **Compatibility:** Requires Business Protocol Version ≥ 1.12.0. Hosts below 1.12.0 silently ignore the unrecognized field name per existing forward-compatibility rules and return a result without it. Controllers MUST NOT rely on `pending-power` from hosts below 1.12.0.
 
 ### v1.11.0 — 2026-07-25
 
 - **Delayed Power Actions and Cancellation (`CoLinkBusiness/system-control.md`)**
   - **New field:** `delay` (integer or null) added to `system-control.v1.command`. Applicable only to `sleep`, `shutdown`, and `lock`; the host MUST silently ignore it for all other actions. A non-negative integer specifies the number of seconds to wait before executing the action; `null` or omitted means execute immediately (equivalent to `0`). If a negative value is received, the host MUST treat it as `0`.
-  - **New action:** `cancel-power` cancels the most recently scheduled delayed power action on the current connection. If no delayed action is pending, the host MUST silently ignore the command. Only one delayed power action may be pending per connection at a time; a new delayed command replaces any existing pending one.
+  - **New action:** `cancel-power` cancels the most recently scheduled delayed power action. If no delayed action is pending, the host MUST silently ignore the command. Only one delayed power action may be pending at a time; a new delayed command replaces any existing pending one.
   - **Compatibility:** Requires Business Protocol Version ≥ 1.11.0. Controllers MUST check the peer's advertised version before sending a non-null `delay` or a `cancel-power` command. Hosts below 1.11.0 silently ignore the unknown `cancel-power` action value and the unknown `delay` field per existing forward-compatibility rules.
 
 ### v1.10.0 — 2026-07-23

@@ -17,6 +17,11 @@ type MarkdownNode = {
 };
 
 const protocolRoot = resolve(process.cwd(), '..');
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+
+function withBasePath(path: string): string {
+  return `${basePath}${path}`;
+}
 
 function resolveProtocolPath(path?: string): string | undefined {
   return path ? resolve(protocolRoot, path) : undefined;
@@ -133,7 +138,7 @@ export function getPageImageUrl(page: (typeof source)['$inferPage']) {
 
   return {
     segments,
-    url: '/' + [page.locale, ...docsImageRoute.split('/'), ...segments].filter(Boolean).join('/'),
+    url: withBasePath('/' + [page.locale, ...docsImageRoute.split('/'), ...segments].filter(Boolean).join('/')),
   };
 }
 
@@ -142,7 +147,7 @@ export function getPageMarkdownUrl(page: (typeof source)['$inferPage']) {
 
   return {
     segments,
-    url: '/' + [page.locale, ...docsContentRoute.split('/'), ...segments].filter(Boolean).join('/'),
+    url: withBasePath('/' + [page.locale, ...docsContentRoute.split('/'), ...segments].filter(Boolean).join('/')),
   };
 }
 

@@ -1,0 +1,45 @@
+:root {
+  color-scheme: light dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+}
+
+.landing {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 2rem;
+}
+
+.landing-content {
+  max-width: 44rem;
+}
+
+.landing h1 {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  letter-spacing: -0.06em;
+  margin: 0;
+}
+
+.landing p {
+  color: color-mix(in srgb, currentColor 65%, transparent);
+  font-size: 1.125rem;
+  line-height: 1.7;
+  margin: 1.5rem 0 2rem;
+}
+
+.landing a {
+  background: currentColor;
+  border-radius: 0.5rem;
+  color: Canvas;
+  display: inline-block;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+}

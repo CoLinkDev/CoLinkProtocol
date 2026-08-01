@@ -25,13 +25,28 @@ export const protocolNavigation: NavigationMeta[] = [
     },
   },
   { path: 'ImplementGuide/meta.json', data: { title: 'Implementation Guide' } },
-  { path: 'CoLinkBusiness/meta.json', data: { title: 'Business Protocol' } },
-  { path: 'CoLinkP2P/meta.json', data: { title: 'P2P Protocol' } },
-  { path: 'CoLinkP2P/websocket/meta.json', data: { title: 'P2P WebSocket' } },
-  { path: 'CoLinkServerRESTAPI/meta.json', data: { title: 'Server REST API' } },
+  {
+    path: 'CoLinkBusiness/meta.json',
+    data: { title: 'Business Protocol', pagesIndex: 'README' },
+  },
+  {
+    path: 'CoLinkP2P/meta.json',
+    data: { title: 'P2P Protocol', pagesIndex: 'websocket/README' },
+  },
+  {
+    path: 'CoLinkP2P/websocket/meta.json',
+    data: { title: 'P2P WebSocket', pagesIndex: 'README' },
+  },
+  {
+    path: 'CoLinkServerRESTAPI/meta.json',
+    data: { title: 'Server REST API', pagesIndex: 'README' },
+  },
   { path: 'CoLinkServerRESTAPI/auth/meta.json', data: { title: 'Authentication' } },
   { path: 'CoLinkServerRESTAPI/devices/meta.json', data: { title: 'Devices' } },
-  { path: 'CoLinkServerRESTAPI/push/meta.json', data: { title: 'Push Notification' } },
+  {
+    path: 'CoLinkServerRESTAPI/push/meta.json',
+    data: { title: 'Push Notification', pagesIndex: 'README' },
+  },
   { path: 'CoLinkServerRESTAPI/update/meta.json', data: { title: 'Updates' } },
   { path: 'CoLinkServerRESTAPI/websocket/meta.json', data: { title: 'Cloud WebSocket' } },
 ];

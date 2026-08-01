@@ -1,5 +1,5 @@
-import { readFileSync, statSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { basename, dirname, relative, resolve } from 'node:path';
 
 import { loader, update } from 'fumadocs-core/source';
 import { docsContentRoute, docsImageRoute, docsRoute } from './shared';
@@ -33,14 +33,46 @@ function deriveTitle(path: string | undefined, fallback?: string): string | unde
   return heading?.replace(/\s+\[#.+\]$/, '').replace(/`/g, '') ?? fallback;
 }
 
+function findDirectoryEntry(directory: string): string | undefined {
+  const readme = resolve(directory, 'README.md');
+  if (existsSync(readme)) return readme;
+
+  const nestedReadmes = readdirSync(directory, { recursive: true })
+    .filter((entry): entry is string => typeof entry === 'string' && basename(entry) === 'README.md')
+    .map((entry) => resolve(directory, entry))
+    .sort();
+
+  return nestedReadmes.length === 1 ? nestedReadmes[0] : undefined;
+}
+
+function normalizeLocalDocumentLink(url: string, sourcePath?: string): string {
+  const [pathname, fragment = ''] = url.split('#', 2);
+  if (!sourcePath || !pathname || pathname.startsWith('.') || pathname.endsWith('.md')) {
+    return url;
+  }
+
+  const target = resolve(dirname(sourcePath), pathname);
+  if (!existsSync(target) || !statSync(target).isDirectory()) return url;
+
+  const entry = findDirectoryEntry(target);
+  if (!entry) return url;
+
+  const route = relative(dirname(sourcePath), entry).replaceAll('\\', '/');
+  return `${route.startsWith('.') ? route : `./${route}`}${fragment ? `#${fragment}` : ''}`;
+}
+
 function remarkNormalizeProtocolMarkdown() {
-  return (tree: MarkdownNode) => {
+  return (tree: MarkdownNode, file: { path?: string }) => {
     const firstH1 = tree.children?.findIndex((node) => node.type === 'heading' && node.depth === 1);
     if (firstH1 !== undefined && firstH1 >= 0) tree.children?.splice(firstH1, 1);
 
     const visit = (node: MarkdownNode) => {
-      if (node.type === 'link' && node.url?.match(/^[^/#][^#]*\.md(?:#.*)?$/)) {
-        node.url = `./${node.url}`;
+      if (node.type === 'link' && node.url) {
+        node.url = normalizeLocalDocumentLink(node.url, file.path);
+
+        if (node.url.match(/^(?!\.?\/)[^/#][^#]*\.md(?:#.*)?$/)) {
+          node.url = `./${node.url}`;
+        }
       }
       node.children?.forEach(visit);
     };

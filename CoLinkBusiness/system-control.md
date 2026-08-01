@@ -91,11 +91,12 @@ Sent by the controller to request the current value of one or more system state 
 
 ### Queryable Fields
 
-| Value      | Description |
-|------------|-------------|
-| `volume`   | Current system master volume (0–100) |
-| `muted`    | Whether system audio is muted |
-| `playback` | Current media playback state |
+| Value           | Description |
+|-----------------|-------------|
+| `volume`        | Current system master volume (0–100) |
+| `muted`         | Whether system audio is muted |
+| `playback`      | Current media playback state |
+| `pending-power` | The currently pending delayed power action on this connection, if any |
 
 - The host MUST silently ignore unrecognized field names in `fields` and return only the fields it recognizes
 - If all requested fields are unrecognized, the host MUST return a `system-control.v1.result` with an empty payload object
@@ -113,23 +114,36 @@ Sent by the host in response to a `system-control.v1.query`. The `correlationId`
   "payload": {
     "volume": 75,
     "muted": false,
-    "playback": "playing"
+    "playback": "playing",
+    "pending-power": {
+      "action": "shutdown",
+      "remainingMs": 42000
+    }
   }
 }
 ```
 
 Only fields that were both requested and recognized by the host are included in the payload.
 
-| Field     | Type            | Description |
-|-----------|-----------------|-------------|
-| volume    | integer/null    | Current system master volume, 0–100. `null` if unavailable. |
-| muted     | boolean/null    | Whether system audio is currently muted. `null` if unavailable. |
-| playback  | string/null     | Current media playback state. One of `"playing"`, `"paused"`, `"stopped"`. `null` if no controllable media session exists or the state is unavailable. |
+| Field           | Type         | Description |
+|-----------------|--------------|-------------|
+| volume          | integer/null | Current system master volume, 0–100. `null` if unavailable. |
+| muted           | boolean/null | Whether system audio is currently muted. `null` if unavailable. |
+| playback        | string/null  | Current media playback state. One of `"playing"`, `"paused"`, `"stopped"`. `null` if no controllable media session exists or the state is unavailable. |
+| pending-power   | object/null  | The currently pending delayed power action on this connection. `null` if no delayed power action is pending. See [Pending Power Object](#pending-power-object). |
+
+### Pending Power Object
+
+| Field        | Type    | Description |
+|--------------|---------|-------------|
+| action       | string  | The pending action. One of `"sleep"`, `"shutdown"`, `"lock"`. |
+| remainingMs  | integer | Milliseconds remaining until the action executes, calculated at the moment the host processes the query. Minimum value is `0` (action is imminent). |
 
 ### Notes
 
 - The host SHOULD NOT send this message type unsolicited
 - A field whose value cannot be determined MUST be reported as `null` rather than omitted
+- `remainingMs` is computed as `scheduledTime + delayMs − now`, clamped to a minimum of `0`. If the action executes between the host computing and sending the result, the host SHOULD return `null` for `pending-power`
 
 ---
 
@@ -176,3 +190,4 @@ Sent by the host when the query cannot be fulfilled. The `correlationId` in the 
 - Hosts below Version 1.7.0 encounter `system-control.v1.query` as an unknown message type and silently ignore it per existing forward-compatibility rules. Controllers MUST NOT send a query to such hosts.
 - Hosts below Version 1.8.0 encounter `wake-on-lan` as an unknown action value and silently ignore the command per existing forward-compatibility rules. Controllers MUST NOT send a `wake-on-lan` command to such hosts.
 - Hosts below Version 1.11.0 encounter `cancel-power` as an unknown action value and silently ignore the command. They also silently ignore the `delay` field in power commands per existing unknown-field rules. Controllers MUST NOT use `delay` or send `cancel-power` to hosts below Version 1.11.0.
+- The `pending-power` query field requires Version 1.12.0 or later. Hosts below Version 1.12.0 silently ignore the unrecognized field name per existing forward-compatibility rules and return a result without it. Controllers MUST NOT rely on `pending-power` from hosts below Version 1.12.0.

@@ -61,6 +61,14 @@
 
 ## Business Protocol
 
+### v1.12.0 — 2026-08-01
+
+- **Pending Power Query (`CoLinkBusiness/system-control.md`)**
+  - **New queryable field:** `pending-power` added to `system-control.v1.query`. Returns the currently pending delayed power action on the current connection as an object, or `null` if no delayed power action is pending.
+  - **Pending Power Object:** Contains `action` (one of `"sleep"`, `"shutdown"`, `"lock"`) and `remainingMs` (integer, milliseconds remaining until execution, minimum `0`). `remainingMs` is computed at the moment the host processes the query and clamped to `0`. If the action executes between computation and sending the result, the host SHOULD return `null`.
+  - **Scope:** Per-connection, consistent with the existing `cancel-power` semantics. Only delayed actions scheduled via the current connection are reflected.
+  - **Compatibility:** Requires Business Protocol Version ≥ 1.12.0. Hosts below 1.12.0 silently ignore the unrecognized field name per existing forward-compatibility rules and return a result without it. Controllers MUST NOT rely on `pending-power` from hosts below 1.12.0.
+
 ### v1.11.0 — 2026-07-25
 
 - **Delayed Power Actions and Cancellation (`CoLinkBusiness/system-control.md`)**

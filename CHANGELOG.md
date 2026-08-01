@@ -4,6 +4,12 @@
 
 ## Server Protocol
 
+### 2026-08-02
+
+- **Update Asset SHA-256 (`CoLinkServerRESTAPI/update/check.md`, `CoLinkServerRESTAPI/update/tauri.md`)**
+  - **New optional field:** Adds `sha256` to update assets and the Tauri update manifest. It is the lowercase hexadecimal SHA-256 digest of the exact bytes returned by the corresponding download URL.
+  - **Compatibility:** The field is additive and optional. Clients that receive no `sha256` field skip checksum verification and continue their existing update flow. Clients that receive it verify the downloaded bytes before installation or use.
+
 ### 2026-07-27
 
 - **Push Notification API (`CoLinkServerRESTAPI/push/`)**

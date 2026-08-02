@@ -91,4 +91,4 @@ When a device needs to use a feature introduced in a specific version, it MUST c
 6. If major versions differ, the receiver sends `protocol.hello-ack` with `compatible: false`.
 7. A side that sends or receives `compatible: false` MUST NOT proceed to auth/pairing. The connection remains open.
 8. The hello phase is complete when both sides have sent and received a `compatible: true` ack. Only then MAY auth/pairing proceed.
-9. `deviceId` is a claimed identity before authentication completes. It MUST NOT be treated as an authenticated identity before authentication completes.
+9. `protocol.hello.payload.deviceId` identifies the device that the sender claims to represent. In the current connection state, the receiver MUST NOT confirm the sender's identity based only on this value or establish a trust relationship from it. The device identity is considered verified only after authentication or pairing succeeds.

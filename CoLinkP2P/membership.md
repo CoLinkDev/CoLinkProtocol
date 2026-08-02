@@ -71,8 +71,8 @@ Request and response bodies are SWIM messages. No additional port or persistent 
 |---------------------|---------|-------------------------------------------------|
 | protocolPeriod      | 5000ms  | Next round starts only after previous completes |
 | directPingTimeout   | 1000ms  | Timeout for direct ping HTTP call               |
-| indirectPingTimeout | 2000ms  | Timeout for intermediary's ping to target       |
-| probeBatchSize      | 2       | Number of targets probed concurrently per round |
+| indirectPingTimeout | 2000ms  | Timeout for the complete indirect `ping-req` HTTP call, including intermediary processing |
+| probeBatchSize      | 2       | Maximum targets selected per round; targets are probed sequentially |
 | pingReqFanout       | 2       | min(configured, members - 2)                    |
 | suspectMisses       | 2       | Consecutive full probe misses before marking suspect |
 | suspectTimeout      | 3000ms  | Time before suspect becomes dead                |
@@ -82,7 +82,7 @@ These are recommended starting values. Implementations MAY adjust based on actua
 
 ### Message Format
 
-All messages use the standard `type` + `payload` envelope:
+SWIM HTTP request and response bodies use a `type` + `payload` envelope:
 
 ```json
 {
@@ -115,11 +115,27 @@ Types: `swim.ping`, `swim.ack`, `swim.ping-req`.
 }
 ```
 
+`swim.ack` uses the same payload shape without `target`:
+
+```json
+{
+  "type": "swim.ack",
+  "payload": {
+    "seq": 42,
+    "from": "deviceId-B",
+    "incarnation": 1748352000000,
+    "gossip": []
+  }
+}
+```
+
+`seq` identifies the ping request at the node that sends it. An intermediary MAY use a new local `seq` when sending its ping to the target. The caller identifies the target response by `payload.from` and MUST NOT require the returned `seq` to equal the original `ping-req` `seq`.
+
 ### Flow
 
 - `ping`: POST to target. Target responds with `ack` in the HTTP response body. Both `ping` and `ack` carry a `gossip` array.
-- `ping-req`: POST to intermediary with `target` set. Intermediary POSTs a `ping` to target, waits for target's `ack`, then returns **target's original ack** (preserving target's `from` and `seq`) as the HTTP response to the caller.
-- Probe round: one round = `probeBatchSize` targets probed sequentially. Each target goes through a direct ping attempt + (on timeout) concurrent indirect ping-req requests to up to `pingReqFanout` intermediaries (the first successful target ack wins). Blocking — next round does not start until all targets in the current round resolve.
+- `ping-req`: POST to intermediary with `target` set. Intermediary POSTs a `ping` to target, waits for target's `ack`, then returns **target's original ack** (preserving target's `from` and `seq`) as the HTTP response to the caller. The caller treats the response as a successful indirect probe only when `ack.payload.from` equals the requested target.
+- Probe round: one round selects up to `probeBatchSize` targets and probes those targets sequentially. Each target goes through a direct ping attempt + (on timeout) concurrent indirect ping-req requests to up to `pingReqFanout` intermediaries (the first successful target ack wins). Blocking — the next regular round does not start until all targets in the current round resolve.
 - Probe targets are selected randomly; the specific scheme is implementation-defined. A recommended approach is a shuffled deck: shuffle candidates into a queue, dequeue `probeBatchSize` per round, and re-shuffle when the candidate set changes or all candidates have been probed, to avoid long-tail latency where some peers go unprobed for many rounds.
 
 ### Direct Observation

@@ -68,7 +68,7 @@ Two formats coexist on the wire:
 - `seq` is per-connection, per-direction. Each side maintains its own counter.
 - A gap in `seq` indicates message loss.
 - `timestamp` is the sender's local clock.
-- Before authentication completes, `from` is merely a claimed identity. The receiver MAY use it to look up a candidate trust record, but MUST verify it through `auth.v1` signature verification or `pairing.v1` code confirmation.
+- Before authentication completes, `from` is merely a claimed identity. The receiver MAY use it to look up a candidate trust record, but MUST NOT use it alone to confirm the sender's identity or establish trust. The receiver MUST verify it through `auth.v1` signature verification or `pairing.v1` confirmation.
 - `to` MUST equal the local deviceId. A receiver MUST reject any message where `to` does not match itself.
 
 Type namespaces:

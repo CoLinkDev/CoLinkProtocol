@@ -131,10 +131,12 @@ value  = BigEndian_U64(digest[0..8]) % 1_000_000
 code   = zero-padded to 6 decimal digits (e.g. "047291")
 ```
 
-- Inputs: both public keys (lexicographically sorted) + both nonces encoded as the canonical string above
+- `publicKeyA` and `publicKeyB` are the exact public-key string values from the pairing messages. They use standard Base64 encoding of the Ed25519 public keys. Implementations MUST sort these strings by ASCII lexicographic order and MUST NOT decode them before sorting.
+- The canonical string contains five lines separated by LF (`U+000A`) and has no trailing line break. The public keys and nonces are inserted as their exact string values; no whitespace or other normalization is applied.
+- Inputs: both public keys (ASCII-lexicographically sorted) + both nonces encoded as the canonical string above
 - Public key sorting ensures both sides compute the same value regardless of role
 - Nonces are not sorted: `nonceA` is the `pairing.v1.request` nonce, `nonceB` is the `pairing.v1.exchange` nonce
-- Truncation: take the first 8 bytes of the SHA-256 digest, interpret as a big-endian unsigned 64-bit integer, compute modulo 1,000,000, and format as a zero-padded 6-digit decimal string
+- Truncation: take the first 8 bytes of the SHA-256 digest (`digest[0]` through `digest[7]`), interpret them as a big-endian unsigned 64-bit integer, compute modulo 1,000,000, and format as a zero-padded 6-digit decimal string
 
 **Example user experience:**
 

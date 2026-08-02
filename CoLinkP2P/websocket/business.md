@@ -256,9 +256,9 @@ Both sides simultaneously send a `business.v1.negotiate` message to agree on a c
 | Field | Type | Description |
 |-------|------|-------------|
 | supported | string[] | Cipher suites this device supports |
-| preferred | string | First choice from the supported list |
+| preferred | string | **Deprecated.** Retained for wire compatibility. Receivers MUST ignore this field. |
 
-Both sides send this message simultaneously. The agreed suite is determined by: take the intersection of both `supported` lists, then pick the one that appears first in the initiator's `supported` list. If the intersection is empty, negotiation fails locally and business messages are rejected until a compatible negotiation succeeds.
+Both sides send this message simultaneously. Senders MAY continue to include `preferred` for compatibility with older implementations, but receivers MUST ignore it. The agreed suite is determined by taking the intersection of both `supported` lists, then picking the one that appears first in the initiator's `supported` list. If the intersection is empty, negotiation fails locally and business messages are rejected until a compatible negotiation succeeds.
 
 **Cipher suite format:** `<key-exchange>-<symmetric-cipher>`
 

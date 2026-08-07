@@ -87,7 +87,7 @@ Type namespaces:
 |-------|----------|
 | Version Negotiation | [protocol-hello.md](protocol-hello.md) |
 | Authentication | [auth.md](auth.md) |
-| Pairing | [pairing.md](pairing.md), [pair-string.md](pair-string.md), [pair-string-v2.md](pair-string-v2.md) |
+| Pairing | [pairing.md](pairing.md) |
 | Business Messages | [business.md](business.md) |
 | Keepalive | [keepalive.md](keepalive.md) |
 

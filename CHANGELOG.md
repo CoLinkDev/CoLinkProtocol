@@ -35,6 +35,12 @@
 
 ## P2P Protocol
 
+### 2026-08-08
+
+- **Documentation: Pairing URL References (`CoLinkP2P/websocket/`)**
+  - Removed `pair-string.md` and `pair-string-v2.md`. Pairing URL specifications are now in `CoLinkURLScheme/pair.md`.
+  - Updated `pairing.md` and `README.md` to reference `CoLinkURLScheme/pair.md`.
+
 ### v1.4.0 — 2026-07-30
 
 - **Pair String v2 (`CoLinkP2P/websocket/pair-string-v2.md`)**
@@ -172,3 +178,11 @@
 - **System Information Push and Receiver Liveness (`CoLinkBusiness/sysinfo.md`)**
   - **Messages and fields:** The source device sends `sysinfo.v1.stats` resource snapshots to receivers. `payload.cpu` and `payload.mem` are numeric percentages from 0 to 100; `payload.gpu` is an optional number or `null`. Receivers send `sysinfo.v1.alive` with an empty payload as a subscription-liveness heartbeat.
   - **Push control:** The source maintains liveness independently for each receiver and sends `stats` only to live receivers. The recommended cadence is a 3-second sampling/push interval and a 5-second `alive` interval; the source stops a receiver's data flow after 15 seconds without its heartbeat and resumes it when a new heartbeat arrives.
+
+## URL Scheme
+
+### 2026-08-08
+
+- **CoLink URL Scheme (`CoLinkURLScheme/`)**
+  - **New structure:** Adds `CoLinkURLScheme/README.md` (scheme format and platform registration) and `CoLinkURLScheme/pair.md` (pairing URL v1 and v2 specifications merged from the removed P2P docs).
+  - **No protocol changes:** The `colink://pair/v1` and `colink://pair/v2` formats remain unchanged.

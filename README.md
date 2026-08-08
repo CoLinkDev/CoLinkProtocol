@@ -5,6 +5,7 @@
 - [`CoLinkServerRESTAPI`](CoLinkServerRESTAPI/) — HTTP and WebSocket protocols between devices and the cloud server.
 - [`CoLinkP2P`](CoLinkP2P/) — Device-to-device discovery, authentication, pairing, connection and transport protocols.
 - [`CoLinkBusiness`](CoLinkBusiness/) — Transport-agnostic application-level messages.
+- [`CoLinkURLScheme`](CoLinkURLScheme/) — The `colink://` URL scheme used to trigger actions in CoLink applications (deeplinks, pairing URLs).
 - Normative requirements in protocol directories take precedence over `ImplementGuide`. If the two conflict, the implementation guide should be corrected — guides MUST NOT override protocol text.
 - This repository is the sole source of protocol definitions. Implementations MUST strictly align with published protocol documents and MUST NOT define or modify protocol semantics through implementation code.
 

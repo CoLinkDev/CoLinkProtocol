@@ -95,6 +95,7 @@ const docs = defineDocs({
       'CoLinkBusiness/**/*.md',
       'CoLinkP2P/**/*.md',
       'CoLinkServerRESTAPI/**/*.md',
+      'CoLinkURLScheme/**/*.md',
     ],
     schema: pageSchema.extend({
       title: pageSchema.shape.title.optional(),

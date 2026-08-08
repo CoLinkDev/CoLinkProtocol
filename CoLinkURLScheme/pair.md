@@ -139,4 +139,4 @@ The token is a bearer credential: a party that obtains it can reserve the pairin
 
 ## Integration with Pairing Flow
 
-URL-based pairing is an alternative confirmation method within the `pairing.v1` flow documented in `CoLinkP2P/websocket/pairing.md`. When an initiator includes a valid pairing URL in `pairing.v1.request` and the receiver validates and reserves the token, the receiver automatically sends `pairing.v1.confirm` without displaying or using the numeric pairing code. The original numeric-code flow is used only when no pairing URL is provided.
+URL-based pairing is an alternative confirmation method within the `pairing.v1` flow documented in [`CoLinkP2P/websocket/pairing.md`](../CoLinkP2P/websocket/pairing.md). When an initiator includes a valid pairing URL in `pairing.v1.request` and the receiver validates and reserves the token, the receiver automatically sends `pairing.v1.confirm` without displaying or using the numeric pairing code. The original numeric-code flow is used only when no pairing URL is provided.

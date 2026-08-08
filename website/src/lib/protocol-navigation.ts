@@ -16,6 +16,7 @@ export const protocolNavigation: NavigationMeta[] = [
         'CoLinkServerRESTAPI',
         'CoLinkP2P',
         'CoLinkBusiness',
+        'CoLinkURLScheme',
         '---Implementation---',
         'ImplementGuide',
         '---History---',
@@ -28,6 +29,10 @@ export const protocolNavigation: NavigationMeta[] = [
   {
     path: 'CoLinkBusiness/meta.json',
     data: { title: 'Business Protocol', pagesIndex: 'README' },
+  },
+  {
+    path: 'CoLinkURLScheme/meta.json',
+    data: { title: 'CoLink URL Scheme', pagesIndex: 'README' },
   },
   {
     path: 'CoLinkP2P/meta.json',

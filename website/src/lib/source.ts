@@ -4,6 +4,7 @@ import { basename, dirname, relative, resolve } from 'node:path';
 import { loader, update } from 'fumadocs-core/source';
 import { docsContentRoute, docsImageRoute, docsRoute } from './shared';
 import { defineDocs } from 'fumadocs-mdx/macro';
+import { remarkMdxMermaid } from 'fumadocs-core/mdx-plugins';
 import { metaSchema, pageSchema } from 'fumadocs-core/source/schema';
 import { applyMdxPreset } from 'fumadocs-mdx/config';
 
@@ -101,7 +102,7 @@ const docs = defineDocs({
       title: pageSchema.shape.title.optional(),
     }),
     mdxOptions: applyMdxPreset({
-      remarkPlugins: (plugins) => [remarkNormalizeProtocolMarkdown, ...plugins],
+      remarkPlugins: (plugins) => [remarkNormalizeProtocolMarkdown, remarkMdxMermaid, ...plugins],
     }),
     postprocess: {
       includeProcessedMarkdown: true,

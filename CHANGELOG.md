@@ -4,6 +4,12 @@
 
 ## Server Protocol
 
+### 2026-08-15
+
+- **Cloud WebSocket liveness (`CoLinkServerRESTAPI/websocket/v1.md`)**
+  - Defines control-frame liveness enforcement: clients respond to WebSocket `Ping` with `Pong`; after 60 seconds without a control `Pong`, the server closes the connection and broadcasts `device.offline`.
+  - **Compatibility:** No envelope, message, or field changes. Existing conforming WebSocket clients remain compatible.
+
 ### 2026-08-02
 
 - **Update Asset SHA-256 (`CoLinkServerRESTAPI/update/check.md`, `CoLinkServerRESTAPI/update/tauri.md`)**

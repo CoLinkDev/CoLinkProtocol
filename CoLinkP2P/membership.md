@@ -4,14 +4,14 @@ Cluster membership and failure detection for the local network.
 
 ## Architecture
 
-```
-┌─────────────────────────────────┐
-│  Upper Layers (WebSocket, App)  │  ← reacts to SWIM state transitions
-├─────────────────────────────────┤
-│  SWIM (membership authority)    │  ← sole source of truth for node state
-├─────────────────────────────────┤
-│  mDNS/DNS-SD (address resolver) │  ← internal, not exposed upward
-└─────────────────────────────────┘
+```mermaid
+flowchart BT
+    MDNS["mDNS/DNS-SD<br/>Address resolution and initial peer discovery"]
+    SWIM["SWIM<br/>Membership authority and node-state source of truth"]
+    Upper["Upper layers<br/>WebSocket · App"]
+
+    MDNS -->|Resolved addresses| SWIM
+    SWIM -->|State transitions| Upper
 ```
 
 - **SWIM** is the sole authority on whether a peer is alive, suspect, dead, or left.

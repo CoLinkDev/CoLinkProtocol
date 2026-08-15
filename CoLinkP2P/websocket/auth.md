@@ -101,21 +101,22 @@ The **initiator** is the peer that opened the outbound WebSocket connection (TCP
 
 ## Flow
 
-```
-Initiator                                      Receiver
-  │                                              │
-  │─── auth.v1.challenge ─────────────────────→  │  { nonce_a }
-  │←── auth.v1.challenge ──────────────────────  │  { nonce_b }
-  │                                              │
-  │─── auth.v1.response ──────────────────────→  │  { signature }
-  │←── auth.v1.response ───────────────────────  │  { signature }
-  │                                              │
-  │  Both sides verify the peer's signature      │
-  │                                              │
-  │←── auth.v1.verified ───────────────────────  │
-  │─── auth.v1.verified ──────────────────────→  │
-  │                                              │
-  │        ═══ Authenticated ═══                 │
+```mermaid
+sequenceDiagram
+    participant Initiator
+    participant Receiver
+
+    Initiator->>Receiver: auth.v1.challenge { nonce_a }
+    Receiver->>Initiator: auth.v1.challenge { nonce_b }
+
+    Initiator->>Receiver: auth.v1.response { signature }
+    Receiver->>Initiator: auth.v1.response { signature }
+
+    Note over Initiator,Receiver: Both sides verify the peer's signature
+
+    Receiver->>Initiator: auth.v1.verified
+    Initiator->>Receiver: auth.v1.verified
+    Note over Initiator,Receiver: Authenticated
 ```
 
 ## Rules

@@ -10,15 +10,18 @@ Transfer files between devices via multi-step negotiation.
 
 ## Flow
 
-```
-Sender                          Receiver
-  |--- file.v1.offer ---------->|
-  |<-- file.v1.accept / reject -|
-  |--- file.v1.chunk (0) ----->|
-  |--- file.v1.chunk (1) ----->|
-  |--- ...                      |
-  |--- file.v1.chunk (last) -->|
-  |<-- file.v1.done ------------|
+```mermaid
+sequenceDiagram
+    participant Sender
+    participant Receiver
+
+    Sender->>Receiver: file.v1.offer
+    Receiver->>Sender: file.v1.accept or file.v1.reject
+    Sender->>Receiver: file.v1.chunk (0)
+    Sender->>Receiver: file.v1.chunk (1)
+    Note over Sender,Receiver: Additional chunks
+    Sender->>Receiver: file.v1.chunk (last)
+    Receiver->>Sender: file.v1.done
 ```
 
 ## Messages

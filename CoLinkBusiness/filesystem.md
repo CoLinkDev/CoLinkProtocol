@@ -326,16 +326,18 @@ No payload fields are required. Its envelope `correlationId` MUST reference the 
 
 ### Flow
 
-```
-Uploader (requester)                    Host (remote filesystem)
-        |--- fs.v1.upload ----------------------------------->|  { path }
-        |<-- fs.v1.upload-ready -------------------------------|  correlationId = upload request id
-        |                                                       |  (creates one-time authorization)
-        |--- file.v2.offer ----------------------------------->|  correlationId = upload request id
-        |<-- file.v2.accept -----------------------------------|  (automatic after file.v2 validation)
-        |                                                       |
-        |============= standard file.v2 data transfer =========|
-        |<-- file.v2.done -------------------------------------|
+```mermaid
+sequenceDiagram
+    participant Uploader as Uploader (requester)
+    participant Host as Host (remote filesystem)
+
+    Uploader->>Host: fs.v1.upload { path }
+    Host->>Uploader: fs.v1.upload-ready { correlationId: upload request id }
+    Note right of Host: Creates one-time authorization
+    Uploader->>Host: file.v2.offer { correlationId: upload request id }
+    Host->>Uploader: file.v2.accept
+    Note over Uploader,Host: Standard file.v2 data transfer
+    Host->>Uploader: file.v2.done
 ```
 
 ---

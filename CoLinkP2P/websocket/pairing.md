@@ -151,41 +151,39 @@ If a man-in-the-middle substitutes public keys, the two sides will compute diffe
 
 ## Numeric-Code Flow
 
-```
-Initiator                                      Receiver
-  │                                              │
-  │─── pairing.v1.request ────────────────────→  │  { publicKey, name, nonce }
-  │←── pairing.v1.exchange ────────────────────  │  { publicKey, name, nonce }
-  │                                              │
-  │  Both compute and display pairing code       │
-  │                                              │
-  │  ┌─ User accepts on receiver ──────────┐     │
-  │  │                                     │     │
-  │←── pairing.v1.confirm ─────────────────────  │
-  │─── pairing.v1.complete ────────────────────→  │  Initiator stores trust; receiver stores trust
-  │                                              │
-  │        ═══ Paired ═══                        │
-  │                                              │
-  │  ┌─ User rejects on either side ───────┐    │
-  │  │                                     │    │
-  │←→─ pairing.v1.reject ─────────────────────  │  { reason }
-  │                                              │
+```mermaid
+sequenceDiagram
+    participant Initiator
+    participant Receiver
+
+    Initiator->>Receiver: pairing.v1.request { publicKey, name, nonce }
+    Receiver->>Initiator: pairing.v1.exchange { publicKey, name, nonce }
+    Note over Initiator,Receiver: Both compute and display the pairing code
+
+    alt User accepts on receiver
+        Receiver->>Initiator: pairing.v1.confirm
+        Initiator->>Receiver: pairing.v1.complete
+        Note over Initiator,Receiver: Both store trust records and pairing completes
+    else User rejects on either side
+        Note over Initiator,Receiver: Either side sends pairing.v1.reject { reason }
+    end
 ```
 
 ## Pair-String Flow
 
-```
-Initiator                                      Receiver
-  │                                              │
-  │── pairing.v1.request ─────────────────────→  │  { publicKey, name, nonce, pairString }
-  │                                              │  validates and atomically reserves token
-  │←─ pairing.v1.exchange ─────────────────────  │  { publicKey, name, nonce }
-  │  validates receiver deviceId and publicKey   │
-  │←─ pairing.v1.confirm ──────────────────────  │  automatic local authorization
-  │── pairing.v1.complete ─────────────────────→ │  initiator stores trust; receiver stores trust
-  │                                              │
-  │                 ═══ Paired ═══               │
-  │                                              │
+```mermaid
+sequenceDiagram
+    participant Initiator
+    participant Receiver
+
+    Initiator->>Receiver: pairing.v1.request { publicKey, name, nonce, pairString }
+    Note right of Receiver: Validates and atomically reserves token
+    Receiver->>Initiator: pairing.v1.exchange { publicKey, name, nonce }
+    Note left of Initiator: Validates receiver deviceId and publicKey
+    Receiver->>Initiator: pairing.v1.confirm
+    Note left of Initiator: Automatic local authorization
+    Initiator->>Receiver: pairing.v1.complete
+    Note over Initiator,Receiver: Both store trust records and pairing completes
 ```
 
 ## Rules

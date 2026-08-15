@@ -283,39 +283,43 @@ After `file.v2.done` is sent, the data connection (if any) is closed and the pat
 
 ### LAN (dedicated data connection)
 
-```
-Sender                    Main WS                   Receiver
-  |--- file.v2.offer ---------------------------->|
-  |<-- file.v2.accept ----------------------------|
-  |                                                |  (registers /transfer/{sessionId})
-  |===== connect ws://{ip}:{port}/transfer/{id}?token={t} ==>|  (dedicated binary WS)
-  |--- file.v2.ready ---------------------------->|  (main WS)
-  |                                                |
-  |--- [chunk 0] ---- data WS ------------------->|
-  |--- [chunk 1] ---- data WS ------------------->|
-  |<-- [ack nextExp=2] -- data WS ----------------|
-  |--- [chunk 2] ---- data WS ------------------->|
-  |--- [chunk 3] ---- data WS ------------------->|
-  |<-- [ack nextExp=4] -- data WS ----------------|
-  |...                                             |
-  |--- [finish] ------ data WS ------------------>|  (sender: all chunks sent)
-  |                                                |  (receiver: verify checksum)
-  |<-- file.v2.done ------------------------------|  (main WS, authoritative)
-  |===== data WS closed ==========================|  (deregisters path)
+```mermaid
+sequenceDiagram
+    participant Sender
+    participant Receiver
+
+    Sender->>Receiver: file.v2.offer
+    Receiver->>Sender: file.v2.accept
+    Note right of Receiver: Registers /transfer/{sessionId}
+    Sender->>Receiver: Connect dedicated binary WebSocket with token
+    Sender->>Receiver: file.v2.ready (main WebSocket)
+    Sender-->>Receiver: Data WebSocket chunk 0
+    Sender-->>Receiver: Data WebSocket chunk 1
+    Receiver-->>Sender: Data WebSocket ack { nextExpectedIndex: 2 }
+    Sender-->>Receiver: Data WebSocket chunk 2
+    Sender-->>Receiver: Data WebSocket chunk 3
+    Receiver-->>Sender: Data WebSocket ack { nextExpectedIndex: 4 }
+    Note over Sender,Receiver: Additional chunks
+    Sender-->>Receiver: Data WebSocket finish
+    Note right of Receiver: Verifies checksum
+    Receiver->>Sender: file.v2.done (main WebSocket, authoritative)
+    Note over Sender,Receiver: Data WebSocket closes and path is deregistered
 ```
 
 ### Cloud Relay (degraded mode)
 
-```
-Sender                    Main WS                   Receiver
-  |--- file.v2.offer ---------------------------->|
-  |<-- file.v2.accept ----------------------------|
-  |                                                |
-  |--- file.v2.chunk (base64, JSON) ------------->|  (main WS)
-  |--- file.v2.chunk ----------------------------->|
-  |<-- file.v2.ack { nextExpectedIndex } ---------|  (main WS)
-  |...                                             |
-  |<-- file.v2.done ------------------------------|  (main WS, authoritative)
+```mermaid
+sequenceDiagram
+    participant Sender
+    participant Receiver
+
+    Sender->>Receiver: file.v2.offer
+    Receiver->>Sender: file.v2.accept
+    Sender->>Receiver: file.v2.chunk { base64 data } (main WebSocket)
+    Sender->>Receiver: file.v2.chunk (main WebSocket)
+    Receiver->>Sender: file.v2.ack { nextExpectedIndex } (main WebSocket)
+    Note over Sender,Receiver: Additional chunks and acknowledgements
+    Receiver->>Sender: file.v2.done (main WebSocket, authoritative)
 ```
 
 ## Reliable Transfer Mechanism

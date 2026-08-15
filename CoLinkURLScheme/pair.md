@@ -109,11 +109,13 @@ Encode the JSON payload as UTF-8, encode those bytes with unpadded base64url, th
 
 The receiver creates a 32-byte token using a cryptographically secure random source and keeps the token state only in memory. The token state is:
 
-```
-active → reserved → consumed
-                  └→ cancelled
-active ───────────→ cancelled
-reserved ─────────→ cancelled
+```mermaid
+stateDiagram-v2
+    [*] --> active
+    active --> reserved
+    reserved --> consumed
+    active --> cancelled
+    reserved --> cancelled
 ```
 
 - A receiver MUST associate each active token with the `deviceId` and `publicKey` it issued in the pairing URL.

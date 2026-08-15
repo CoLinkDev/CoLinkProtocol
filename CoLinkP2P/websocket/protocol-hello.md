@@ -63,18 +63,17 @@ Well-known reasons:
 
 ## Flow
 
-```
-A                                          B
-│                                          │
-│─── protocol.hello ─────────────────────→ │  { deviceId, protocolVersion, extensions }
-│←── protocol.hello ────────────────────── │  { deviceId, protocolVersion, extensions }
-│                                          │
-│  Both check version compatibility        │
-│                                          │
-│─── protocol.hello-ack ─────────────────→ │  { compatible: true }
-│←── protocol.hello-ack ────────────────── │  { compatible: true }
-│                                          │
-│      ═══ Proceed to auth/pairing ═══     │
+```mermaid
+sequenceDiagram
+    participant A
+    participant B
+
+    A->>B: protocol.hello { deviceId, protocolVersion, extensions }
+    B->>A: protocol.hello { deviceId, protocolVersion, extensions }
+    Note over A,B: Both check version compatibility
+    A->>B: protocol.hello-ack { compatible: true }
+    B->>A: protocol.hello-ack { compatible: true }
+    Note over A,B: Proceed to auth or pairing
 ```
 
 ## Version Semantics

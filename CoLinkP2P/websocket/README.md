@@ -93,69 +93,32 @@ Type namespaces:
 
 ## Connection Lifecycle
 
-```
-┌───────────────────────────────────────────────────────────────────────┐
-│                        WebSocket Connected                             │
-└───────────────────────────┬───────────────────────────────────────────┘
-                            │
-                            ▼
-┌───────────────────────────────────────────────────────────────────────┐
-│                   protocol.hello (both sides)                          │
-│                   protocol.hello-ack (both sides)                      │
-├───────────────────────────┬───────────────────────────────────────────┤
-│                           │                                           │
-│              compatible: false ──→ Connection idle (no progress)       │
-│                           │                                           │
-│              compatible: true                                          │
-└───────────────────────────┬───────────────────────────────────────────┘
-                            │
-              ┌─────────────┴─────────────┐
-              │                           │
-              ▼                           ▼
-┌──────────────────────┐    ┌──────────────────────────┐
-│   auth.v1 (mutual    │    │   pairing.v1 (first-time │
-│   challenge-response)│    │   trust establishment)   │
-├──────────────────────┤    ├──────────────────────────┤
-│                      │    │                          │
-│  reject (unknown) ───┼───→│                          │
-│                      │    │                          │
-│  reject (other) ──→ ×│    │  reject ──→ ×            │
-│                      │    │                          │
-│  verified (both) ────┤    │  complete ───────────────┤
-└──────────┬───────────┘    └─────────────┬────────────┘
-           │                              │
-           └──────────────┬───────────────┘
-                          │
-                          ▼
-┌───────────────────────────────────────────────────────────────────────┐
-│               business.v1.version / version-ack (both sides)          │
-├───────────────────────────┬───────────────────────────────────────────┤
-│              compatible: false ──→ Connection idle (no business)       │
-│              compatible: true                                          │
-└───────────────────────────┬───────────────────────────────────────────┘
-                            │
-              ┌─────────────┴─────────────────────────┐
-              │ Both protocolVersion >= 1.1.0?         │
-              │   Yes ──→ encrypted key setup          │
-              │          • >= 1.2.0: nonce exchange    │
-              │            then key exchange           │
-              │          • 1.1.x: timestamp key        │
-              │            exchange                    │
-              │   No  ──→ skip (legacy derivation)     │
-              └─────────────┬─────────────────────────┘
-                            │
-                            ▼
-┌───────────────────────────────────────────────────────────────────────┐
-│               business.v1.negotiate (both sides)                      │
-│               Agree on cipher suite                                    │
-│               Derive session key                                       │
-└───────────────────────────┬───────────────────────────────────────────┘
-                            │
-                            ▼
-┌───────────────────────────────────────────────────────────────────────┐
-│                    ═══ Session Ready ═══                               │
-│                                                                       │
-│   • business.v1.message (encrypted application data)                  │
-│   • heartbeat.v1.ping / pong (every 15s, 45s timeout)                 │
-└───────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Connected[WebSocket connected]
+    Hello[protocol.hello and protocol.hello-ack<br/>Both sides]
+    Auth[auth.v1<br/>Mutual challenge-response]
+    Pairing[pairing.v1<br/>First-time trust establishment]
+    BusinessVersion[business.v1.version and version-ack<br/>Both sides]
+    KeySetup{Both protocolVersion >= 1.1.0?}
+    EncryptedSetup[Encrypted key setup<br/>>= 1.2.0: nonce exchange, then key exchange<br/>1.1.x: timestamp key exchange]
+    Negotiate[business.v1.negotiate<br/>Agree on cipher suite and derive session key]
+    Ready[Session ready<br/>business.v1.message and heartbeat.v1.ping / pong]
+    Idle[Connection idle]
+    Closed[Connection closed]
+
+    Connected --> Hello
+    Hello -->|compatible: true| Auth
+    Hello -->|compatible: false| Idle
+    Auth -->|verified by both| BusinessVersion
+    Auth -->|unknown device| Pairing
+    Auth -->|other rejection| Closed
+    Pairing -->|complete| BusinessVersion
+    Pairing -->|rejection| Closed
+    BusinessVersion -->|compatible: true| KeySetup
+    BusinessVersion -->|compatible: false| Idle
+    KeySetup -->|Yes| EncryptedSetup
+    KeySetup -->|No: legacy derivation| Negotiate
+    EncryptedSetup --> Negotiate
+    Negotiate --> Ready
 ```

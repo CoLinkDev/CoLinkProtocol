@@ -234,20 +234,22 @@ This behavior mirrors SSH: the connection lifetime bounds the session lifetime.
 
 ## Flow
 
-```
-Controller                                          Host
-     |                                               |
-     |─── terminal.v1.open ────────────────────────→ |  { sessionId, cols, rows, env }
-     |←── terminal.v1.open-ack ──────────────────── |  { sessionId, accepted: true }
-     |                                               |
-     |─── terminal.v1.data (input) ────────────────→ |  { sessionId, stream: "input", data }
-     |←── terminal.v1.data (output) ──────────────── |  { sessionId, stream: "output", data }
-     |                                               |
-     |─── terminal.v1.resize ──────────────────────→ |  { sessionId, cols, rows }
-     |                                               |
-     |←── terminal.v1.close ──────────────────────── |  { sessionId, exitCode: 0 }  (process exited)
-     |                   OR                          |
-     |─── terminal.v1.close ───────────────────────→ |  { sessionId, exitCode: null } (user closed)
+```mermaid
+sequenceDiagram
+    participant Controller
+    participant Host
+
+    Controller->>Host: terminal.v1.open { sessionId, cols, rows, env }
+    Host->>Controller: terminal.v1.open-ack { sessionId, accepted: true }
+    Controller->>Host: terminal.v1.data { stream: "input", data }
+    Host->>Controller: terminal.v1.data { stream: "output", data }
+    Controller->>Host: terminal.v1.resize { sessionId, cols, rows }
+
+    alt Process exits
+        Host->>Controller: terminal.v1.close { sessionId, exitCode: 0 }
+    else User closes the session
+        Controller->>Host: terminal.v1.close { sessionId, exitCode: null }
+    end
 ```
 
 ---

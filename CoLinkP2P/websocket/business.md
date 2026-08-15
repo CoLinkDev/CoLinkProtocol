@@ -64,30 +64,27 @@ Well-known reasons:
 
 **Flow:**
 
-```
-A                                              B
-│                                                 │
-│─── business.v1.version ───────────────────────→ │  { businessVersion }
-│←── business.v1.version ──────────────────────── │  { businessVersion }
-│                                                 │
-│─── business.v1.version-ack ───────────────────→ │  { compatible: true }
-│←── business.v1.version-ack ───────────────────  │  { compatible: true }
-│                                                 │
-│  ┌─ If both protocolVersion >= 1.2.0 ────────┐  │
-│  │                                           │  │
-│  │─── business.v1.key-exchange-nonce ──────→ │  │  { nonce }
-│  │←── business.v1.key-exchange-nonce ─────── │  │  { nonce }
-│  │                                           │  │
-│  └───────────────────────────────────────────┘  │
-│                                                 │
-│  ┌─ If both protocolVersion >= 1.1.0 ────────┐  │
-│  │                                           │  │
-│  │─── business.v1.key-exchange ────────────→ │  │  { ephemeralPublicKey, signature }
-│  │←── business.v1.key-exchange ───────────── │  │  { ephemeralPublicKey, signature }
-│  │                                           │  │
-│  └───────────────────────────────────────────┘  │
-│                                                 │
-│      ═══ Proceed to cipher negotiation ═══      │
+```mermaid
+sequenceDiagram
+    participant A
+    participant B
+
+    A->>B: business.v1.version { businessVersion }
+    B->>A: business.v1.version { businessVersion }
+    A->>B: business.v1.version-ack { compatible: true }
+    B->>A: business.v1.version-ack { compatible: true }
+
+    opt Both protocolVersion >= 1.2.0
+        A->>B: business.v1.key-exchange-nonce { nonce }
+        B->>A: business.v1.key-exchange-nonce { nonce }
+    end
+
+    opt Both protocolVersion >= 1.1.0
+        A->>B: business.v1.key-exchange { ephemeralPublicKey, signature }
+        B->>A: business.v1.key-exchange { ephemeralPublicKey, signature }
+    end
+
+    Note over A,B: Proceed to cipher negotiation
 ```
 
 Both sides MUST complete version exchange (including acks) before proceeding. A side that sends or receives `compatible: false` MUST NOT proceed. The connection remains open.
@@ -124,15 +121,14 @@ Both sides send this message simultaneously. A receiver MUST store the peer nonc
 
 #### Flow
 
-```
-A                                              B
-│                                              │
-│─── business.v1.key-exchange-nonce ─────────→ │  { nonce_a }
-│←── business.v1.key-exchange-nonce ────────── │  { nonce_b }
-│                                              │
-│  Both keep local and peer nonces for the     │
-│  following business.v1.key-exchange          │
-│                                              │
+```mermaid
+sequenceDiagram
+    participant A
+    participant B
+
+    A->>B: business.v1.key-exchange-nonce { nonce_a }
+    B->>A: business.v1.key-exchange-nonce { nonce_b }
+    Note over A,B: Both retain local and peer nonces for the following key exchange
 ```
 
 ### Ephemeral Key Exchange (business.v1.key-exchange)
@@ -209,16 +205,15 @@ Upon receiving or sending `business.v1.key-exchange-reject`, the key exchange ha
 
 #### Flow
 
-```
-A                                              B
-│                                              │
-│─── business.v1.key-exchange ────────────────→│  { ephemeralPublicKey, signature }
-│←── business.v1.key-exchange ─────────────────│  { ephemeralPublicKey, signature }
-│                                              │
-│  Both verify signature and keep verified     │
-│  ephemeral public keys for key derivation    │
-│                                              │
-│      ═══ Proceed to cipher negotiation ═══   │
+```mermaid
+sequenceDiagram
+    participant A
+    participant B
+
+    A->>B: business.v1.key-exchange { ephemeralPublicKey, signature }
+    B->>A: business.v1.key-exchange { ephemeralPublicKey, signature }
+    Note over A,B: Both verify signatures and retain verified ephemeral public keys for key derivation
+    Note over A,B: Proceed to cipher negotiation
 ```
 
 Both sides send simultaneously. Upon receiving the peer's message, each side:

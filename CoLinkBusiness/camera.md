@@ -515,67 +515,68 @@ When the underlying transport closes for any reason:
 
 ### LAN (dedicated data connection)
 
-```
-Controller                   Main WS                    Host
-  |                                                       |
-  |--- camera.v1.list -------------------------------------> |
-  |<-- camera.v1.list-result ----------------------------- |
-  |                                                       |
-  |--- camera.v1.open -------------------------------------> |  { sessionId, cameraId, preferredCodecs, ... }
-  |<-- camera.v1.open-ack -------------------------------- |  { sessionId, accepted: true, negotiatedCodec, streamToken, ... }
-  |                                                       |  (/camera-stream/{sessionId} already registered)
-  |===== connect ws://{ip}:{port}/camera-stream/{id}?token={t} ===>|  (dedicated binary WS)
-  |                                                       |
-  |--- camera.v1.ready -----------------------------------> |  { sessionId, transport: "lan" }
-  |--- camera.v1.alive -----------------------------------> |  { sessionId }  (every 5s)
-  |                                                       |
-  |<== [frame, seq=0, keyframe=1] == data WS ============ |
-  |<== [frame, seq=1] =========== data WS ============== |
-  |<== [frame, seq=2] =========== data WS ============== |
-  |                                                       |
-  |--- camera.v1.config -----------------------------------> |  { sessionId, width: 640, height: 480 }
-  |<-- camera.v1.config-ack ------------------------------ |  { sessionId, applied: true, width: 640, height: 480, fps: 30 }
-  |                                                       |
-  |<== [frame, seq=3, keyframe=1] == data WS ============ |  (first frame at new resolution)
-  |                                                       |
-  |--- camera.v1.close ------------------------------------> |  { sessionId }
-  |===== data WS closed ================================= |
+```mermaid
+sequenceDiagram
+    participant Controller
+    participant Host
+
+    Controller->>Host: camera.v1.list
+    Host->>Controller: camera.v1.list-result
+    Controller->>Host: camera.v1.open { sessionId, cameraId, preferredCodecs, ... }
+    Host->>Controller: camera.v1.open-ack { sessionId, accepted: true, negotiatedCodec, streamToken, ... }
+    Note right of Host: Registers /camera-stream/{sessionId}
+    Controller->>Host: Connect dedicated binary WebSocket with token
+    Controller->>Host: camera.v1.ready { sessionId, transport: "lan" }
+    loop Every 5 seconds
+        Controller->>Host: camera.v1.alive { sessionId }
+    end
+    Host-->>Controller: Data WebSocket frame { sequence: 0, keyframe: true }
+    Host-->>Controller: Data WebSocket frame { sequence: 1 }
+    Host-->>Controller: Data WebSocket frame { sequence: 2 }
+    Controller->>Host: camera.v1.config { sessionId, width: 640, height: 480 }
+    Host->>Controller: camera.v1.config-ack { applied: true, width: 640, height: 480, fps: 30 }
+    Host-->>Controller: Data WebSocket frame { sequence: 3, keyframe: true }
+    Note over Controller,Host: First frame at the new resolution
+    Controller->>Host: camera.v1.close { sessionId }
+    Note over Controller,Host: Dedicated data WebSocket closes
 ```
 
 ### Cloud Relay (degraded mode)
 
-```
-Controller                   Main WS                    Host
-  |                                                       |
-  |--- camera.v1.list -------------------------------------> |
-  |<-- camera.v1.list-result ----------------------------- |
-  |                                                       |
-  |--- camera.v1.open -------------------------------------> |  { sessionId, cameraId, preferredCodecs, ... }
-  |<-- camera.v1.open-ack -------------------------------- |  { sessionId, accepted: true, negotiatedCodec, ... }  (no streamToken)
-  |                                                       |
-  |--- camera.v1.ready -----------------------------------> |  { sessionId, transport: "relay" }
-  |--- camera.v1.alive -----------------------------------> |  { sessionId }  (every 5s)
-  |<-- camera.v1.frame ----------------------------------- |  { sessionId, codec, keyframe: true, sequence: 0, data }
-  |<-- camera.v1.frame ----------------------------------- |  { sessionId, codec, keyframe: false, sequence: 1, data }
-  |                                                       |
-  |--- camera.v1.close ------------------------------------> |  { sessionId }
+```mermaid
+sequenceDiagram
+    participant Controller
+    participant Host
+
+    Controller->>Host: camera.v1.list
+    Host->>Controller: camera.v1.list-result
+    Controller->>Host: camera.v1.open { sessionId, cameraId, preferredCodecs, ... }
+    Host->>Controller: camera.v1.open-ack { sessionId, accepted: true, negotiatedCodec, ... }
+    Note over Controller,Host: No streamToken - frames use the main WebSocket relay
+    Controller->>Host: camera.v1.ready { sessionId, transport: "relay" }
+    loop Every 5 seconds
+        Controller->>Host: camera.v1.alive { sessionId }
+    end
+    Host->>Controller: camera.v1.frame { keyframe: true, sequence: 0, ... }
+    Host->>Controller: camera.v1.frame { keyframe: false, sequence: 1, ... }
+    Controller->>Host: camera.v1.close { sessionId }
 ```
 
 ### LAN Attempt Fallback to Relay
 
-```
-Controller                   Main WS                    Host
-  |                                                       |
-  |--- camera.v1.open -------------------------------------> |
-  |<-- camera.v1.open-ack -------------------------------- |  { accepted: true, streamToken, ... }
-  |                                                       |
-  |===== LAN data WebSocket connection failed ===========X |
-  |--- camera.v1.ready -----------------------------------> |  { sessionId, transport: "relay" }
-  |                                                       |  (invalidates token and deregisters data path)
-  |--- camera.v1.alive -----------------------------------> |
-  |<-- camera.v1.frame ----------------------------------- |
-  |                                                       |
-  |--- camera.v1.close ------------------------------------> |
+```mermaid
+sequenceDiagram
+    participant Controller
+    participant Host
+
+    Controller->>Host: camera.v1.open
+    Host->>Controller: camera.v1.open-ack { accepted: true, streamToken, ... }
+    Note over Controller,Host: LAN data WebSocket connection fails
+    Controller->>Host: camera.v1.ready { sessionId, transport: "relay" }
+    Note right of Host: Invalidates token and deregisters data path
+    Controller->>Host: camera.v1.alive { sessionId }
+    Host->>Controller: camera.v1.frame
+    Controller->>Host: camera.v1.close { sessionId }
 ```
 
 ---

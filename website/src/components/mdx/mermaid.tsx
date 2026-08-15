@@ -1,57 +1,80 @@
 'use client';
 
-import { use, useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useTheme } from 'next-themes';
 
 type MermaidProps = {
   chart: string;
 };
 
-const cache = new Map<string, Promise<unknown>>();
+let mermaidModule: Promise<typeof import('mermaid')> | undefined;
+let renderQueue = Promise.resolve();
 
-function cachePromise<T>(key: string, createPromise: () => Promise<T>): Promise<T> {
-  const cached = cache.get(key);
-  if (cached) return cached as Promise<T>;
+function loadMermaid() {
+  mermaidModule ??= import('mermaid');
+  return mermaidModule;
+}
 
-  const promise = createPromise();
-  cache.set(key, promise);
-  return promise;
+function queueRender(task: () => Promise<void>) {
+  const next = renderQueue.then(task, task);
+  renderQueue = next.catch(() => undefined);
+  return next;
 }
 
 export function Mermaid({ chart }: MermaidProps) {
-  const [mounted, setMounted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { resolvedTheme } = useTheme();
+  const id = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const [error, setError] = useState<string>();
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const container = containerRef.current;
+    if (!container) return;
 
-  if (!mounted) return null;
-  return <MermaidContent chart={chart} />;
-}
+    let cancelled = false;
+    container.replaceChildren();
+    setError(undefined);
 
-function MermaidContent({ chart }: MermaidProps) {
-  const id = useId();
-  const { resolvedTheme } = useTheme();
-  const { default: mermaid } = use(cachePromise('mermaid', () => import('mermaid')));
+    void queueRender(async () => {
+      if (cancelled) return;
 
-  mermaid.initialize({
-    startOnLoad: false,
-    securityLevel: 'strict',
-    fontFamily: 'inherit',
-    themeCSS: 'margin: 1.5rem auto 0;',
-    theme: resolvedTheme === 'dark' ? 'dark' : 'default',
-  });
+      const { default: mermaid } = await loadMermaid();
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: 'strict',
+        fontFamily: 'inherit',
+        themeCSS: 'margin: 1.5rem auto 0;',
+        theme: resolvedTheme === 'dark' ? 'dark' : 'default',
+      });
 
-  const { svg, bindFunctions } = use(
-    cachePromise(`${id}-${chart}-${resolvedTheme}`, () => mermaid.render(id, chart.replaceAll('\\n', '\n'))),
-  );
+      const { svg, bindFunctions } = await mermaid.render(`mermaid-${id}`, chart.replaceAll('\\n', '\n'));
+      if (cancelled) return;
 
-  return (
-    <div
-      ref={(container) => {
-        if (container) bindFunctions?.(container);
-      }}
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
-  );
+      container.innerHTML = svg;
+      bindFunctions?.(container);
+    }).catch((reason: unknown) => {
+      if (cancelled) return;
+
+      const message = reason instanceof Error ? reason.message : 'Unknown Mermaid rendering error';
+      console.error('Unable to render Mermaid diagram.', reason);
+      setError(message);
+    });
+
+    return () => {
+      cancelled = true;
+      container.replaceChildren();
+    };
+  }, [chart, id, resolvedTheme]);
+
+  if (error) {
+    return (
+      <pre className="overflow-x-auto rounded-lg border p-4 text-sm">
+        Mermaid diagram could not render: {error}
+        {'\n\n'}
+        {chart}
+      </pre>
+    );
+  }
+
+  return <div ref={containerRef} aria-label="Mermaid diagram" />;
 }

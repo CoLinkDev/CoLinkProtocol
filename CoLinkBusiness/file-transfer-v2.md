@@ -330,5 +330,7 @@ Both LAN (binary frames) and relay (JSON messages) implement the same reliable t
 
 ## Notes
 
+`fs.v1.download` and `fs.v1.upload` may initiate a standard `file.v2.offer` flow. The filesystem protocol defines their outer-envelope `correlationId` semantics; `file.v2` does not carry or define a remote filesystem path.
+
 - Offer expires after 60s with no response
 - One session = one file; to transfer multiple files, use multiple sessions

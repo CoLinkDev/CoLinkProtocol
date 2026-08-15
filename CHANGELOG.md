@@ -79,6 +79,14 @@
 
 ## Business Protocol
 
+### v1.13.0 — 2026-08-15
+
+- **Remote Filesystem Upload (`CoLinkBusiness/filesystem.md`)**
+  - **New messages:** Adds `fs.v1.upload` for requesting an upload to an absolute remote path, and `fs.v1.upload-ready` for confirming that the host has reserved the destination. The uploader sends the standard `file.v2.offer` only after receiving `upload-ready`.
+  - **Correlation and authorization:** Both the download and upload flows bind their ensuing `file.v2.offer` to the originating filesystem request through the envelope `correlationId`. For uploads, the host creates a one-time, device-bound authorization for the requested destination; a matching offer consumes it.
+  - **Safe destination handling:** The host validates its local write policy and destination before reserving it, revalidates immediately before writing and committing, writes through a temporary file, verifies the standard `file.v2` checksum, and atomically commits without overwriting an existing file. Failed validation or transfer leaves any existing destination unchanged.
+  - **Compatibility:** Requires Business Protocol Version ≥ 1.13.0. Requesters disable remote uploads for older peers while retaining the existing v1.4.0 browsing and download behavior; older peers ignore the new message types under the standard forward-compatibility rule.
+
 ### v1.12.1 — 2026-08-01
 
 - **Delayed Power Action Scope Clarification (`CoLinkBusiness/system-control.md`)**

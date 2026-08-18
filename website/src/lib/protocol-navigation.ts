@@ -25,7 +25,10 @@ export const protocolNavigation: NavigationMeta[] = [
       ],
     },
   },
-  { path: 'ImplementGuide/meta.json', data: { title: 'Implementation Guide' } },
+  { 
+    path: 'ImplementGuide/meta.json', 
+    data: { title: 'Implementation Guide', pagesIndex: 'ImplementGuide/README'} 
+  },
   {
     path: 'CoLinkBusiness/meta.json',
     data: { title: 'Business Protocol', pagesIndex: 'README' },

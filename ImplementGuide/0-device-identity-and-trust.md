@@ -1,6 +1,6 @@
-# Implementation Guide — Device Identity & Trust Lifecycle
+# Device Identity & Trust Lifecycle
 
-This guide describes how clients should implement device identity management, cloud synchronization, trust state, and device list reconciliation. It serves as the authoritative reference for all client implementations (Desktop, Android, iOS, etc.).
+This document describes how CoLink clients implement device identity and trust throughout the device lifecycle: local identity generation and storage, cloud registration and synchronization, merged device-list management, LAN and cloud trust evaluation, key reconciliation, logout cleanup, and key rotation.
 
 ## Terminology
 
@@ -12,7 +12,7 @@ This guide describes how clients should implement device identity management, cl
 | LAN Pairing | The process of establishing mutual trust between two devices via LAN handshake with user-confirmed pairing code. See [CoLinkP2P/websocket/pairing.md](../CoLinkP2P/websocket/pairing.md) for protocol details. |
 | Device List | The merged, deduplicated list of all known devices presented to the user, combining multiple sources. |
 
-## 1. Device Identity Generation
+## Device Identity Generation
 
 ### When
 
@@ -36,7 +36,7 @@ A device identity consists of:
 - The private key SHOULD be stored securely (platform keystore, encrypted storage, etc.).
 - No network call is made during identity generation. This is a purely local operation.
 
-## 2. Cloud Identity Synchronization
+## Cloud Identity Synchronization
 
 Cloud sync refers to registering the local device's identity with the server via `POST /api/v1/devices`. See [CoLinkServerRESTAPI/devices/register.md](../CoLinkServerRESTAPI/devices/register.md) for the endpoint specification.
 
@@ -81,7 +81,7 @@ When a key is rotated while offline (no cloud connection), the client needs a me
 
 This ensures key rotations are never silently lost, regardless of network conditions at the time of rotation.
 
-## 3. Device List Management
+## Device List Management
 
 ### Sources
 
@@ -139,7 +139,7 @@ After reconciliation, each device in the merged list SHOULD convey the following
 | Cloud reachability | Whether this device is currently online via cloud |
 | Origin sources | Where this device entry came from (local, cloud, LAN trust, or a combination) |
 
-## 4. Trust State
+## Trust State
 
 ### Concept
 
@@ -185,7 +185,7 @@ When a device is discovered on LAN (via mDNS → SWIM alive):
 
 Cloud-synced devices discovered on LAN do not require separate pairing — they are already trusted and can connect directly when needed.
 
-## 5. Key Merge Logic
+## Key Merge Logic
 
 When the cloud device list is refreshed, each device's key MUST be reconciled with the local trust record.
 
@@ -210,7 +210,7 @@ When LAN pairing succeeds (user confirms pairing code), upsert the trust record 
 - Enable LAN trust
 - Preserve existing cloud trust state, UNLESS the key changed from what was previously stored → in that case, disable cloud trust (the old cloud key is now invalid)
 
-## 6. Loss of Authentication
+## Loss of Authentication
 
 When the client loses its authenticated state — whether by user-initiated logout, token expiration, or server-side session revocation — the following cleanup is performed:
 
@@ -235,7 +235,7 @@ When the client loses its authenticated state — whether by user-initiated logo
 - Cloud WebSocket connection.
 - Cloud device presence information.
 
-## 7. Key Rotation
+## Key Rotation
 
 A device MAY rotate its key pair (for security or recovery purposes).
 
@@ -252,7 +252,7 @@ A device MAY rotate its key pair (for security or recovery purposes).
 6. Existing LAN sessions using the old key will naturally disconnect.
 7. On next LAN encounter, peers with the old key in their trust store will see a key mismatch → reject → require re-pairing.
 
-## 8. Periodic Sync Summary
+## Periodic Sync Summary
 
 While the cloud WebSocket is connected and healthy:
 

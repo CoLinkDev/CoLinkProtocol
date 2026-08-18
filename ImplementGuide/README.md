@@ -15,5 +15,6 @@ The intended audience is anyone implementing or reviewing CoLink clients, includ
 | Document | Covers |
 |----------|--------|
 | [`0-device-identity-and-trust.md`](0-device-identity-and-trust.md) | Local device identity, Ed25519 keys, cloud registration and synchronization, merged device lists, LAN and cloud trust, key reconciliation, logout cleanup, and key rotation |
+| [`1-connection-lifecycle-and-transport-routing.md`](1-connection-lifecycle-and-transport-routing.md) | Cloud and LAN lifecycle, connection recovery, device presence, per-operation route selection, transport failure handling, and cross-platform verification |
 
 Additional guides will be added here when a concern is shared by multiple client implementations and cannot be expressed clearly in a single protocol document.

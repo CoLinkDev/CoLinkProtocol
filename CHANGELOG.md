@@ -79,6 +79,13 @@
 
 ## Business Protocol
 
+### v1.14.0 — 2026-08-18
+
+- **Text Delivery Receipts (`CoLinkBusiness/text-message.md`)**
+  - **New message:** Adds `message.v1.receipt`, which confirms that the receiving client has validated and persistently recorded a `message.v1.text` payload. It references the text message through its `messageId`; it is not a read receipt and does not imply server persistence or notification display.
+  - **Deduplication:** Receivers deduplicate text messages by `messageId`, avoid duplicate conversation entries and notifications, and repeat the receipt for duplicate deliveries so a retransmission can complete idempotently.
+  - **Compatibility:** A receiver sends a receipt without checking the peer's advertised Business Protocol Version. Older peers ignore the unknown receipt message; senders retain the existing fire-and-forget behavior when a receipt cannot be used.
+
 ### v1.13.0 — 2026-08-15
 
 - **Remote Filesystem Upload (`CoLinkBusiness/filesystem.md`)**

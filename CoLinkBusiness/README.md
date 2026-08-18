@@ -1,6 +1,6 @@
 # CoLink Business Protocol
 
-> **Current Protocol Version: 1.13.0**
+> **Current Protocol Version: 1.14.0**
 >
 > The business protocol uses semantic versioning, independent of the transport layer (P2P / Cloud Relay).
 > - **Major** bump: breaking changes — peers with different major versions cannot exchange business messages.
@@ -13,7 +13,7 @@
 
 | Document | Description |
 |----------|-------------|
-| `text-message.md` | Text messaging between devices |
+| `text-message.md` | Text messaging and delivery receipts between devices |
 | `clipboard.md` | Clipboard synchronization |
 | `file-transfer-v2.md` | File transfer (current) |
 | `file-transfer-v1.md` | File transfer (deprecated) |

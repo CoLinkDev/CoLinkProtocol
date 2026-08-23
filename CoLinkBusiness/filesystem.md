@@ -14,7 +14,7 @@ v1.4.0
 
 - **Request-response model**: the requester sends a query, the host returns the result.
 - **Flat listing**: each `fs.v1.list` returns one directory level (non-recursive) with pagination support.
-- **File transfer via file.v2**: downloads use `fs.v1.download` to request that the host initiate a standard `file.v2.offer`; uploads use `fs.v1.upload` to reserve a remote destination before the requester initiates a standard `file.v2.offer`.
+- **File transfer integration**: downloads use `fs.v1.download` to request that the host initiate a file transfer offer; uploads use `fs.v1.upload` to reserve a remote destination before the requester initiates a file transfer offer. The offer version (`file.v3.offer` or `file.v2.offer`) is determined by the effective Business Protocol Version (≥ v1.15.0 uses v3, otherwise v2).
 - **Local access policy**: the protocol does not define filesystem access-control configuration. The host MUST enforce its local read and write policy when serving filesystem requests.
 
 ## Message Types
@@ -27,14 +27,14 @@ v1.4.0
 | `fs.v1.list-result` | host → requester | Return directory listing |
 | `fs.v1.stat` | requester → host | Request metadata for a single path |
 | `fs.v1.stat-result` | host → requester | Return path metadata |
-| `fs.v1.download` | requester → host | Request file download (triggers file.v2.offer from host) |
+| `fs.v1.download` | requester → host | Request file download (triggers file transfer offer from host) |
 | `fs.v1.upload` | requester → host | Request authorization to upload one file to a remote path |
 | `fs.v1.upload-ready` | host → requester | Confirm that the remote path is reserved for the requested upload |
 | `fs.v1.error` | host → requester | Error response for any fs.v1 request |
 
 ## Correlation
 
-All responses and transfer follow-ups use the Business Envelope's `correlationId` to match the originating request. The host MUST set `correlationId` on every `*-result`, `fs.v1.upload-ready`, and `fs.v1.error` message to the `id` of the corresponding request envelope. For an `fs.v1.download` flow, the host's `file.v2.offer` MUST use the originating download request `id` as its `correlationId`. For an `fs.v1.upload` flow, the requester's `file.v2.offer` MUST use the originating upload request `id` as its `correlationId`.
+All responses and transfer follow-ups use the Business Envelope's `correlationId` to match the originating request. The host MUST set `correlationId` on every `*-result`, `fs.v1.upload-ready`, and `fs.v1.error` message to the `id` of the corresponding request envelope. For an `fs.v1.download` flow, the host's file transfer offer MUST use the originating download request `id` as its `correlationId`. For an `fs.v1.upload` flow, the requester's file transfer offer MUST use the originating upload request `id` as its `correlationId`.
 
 ---
 
@@ -256,23 +256,25 @@ Upon receiving `fs.v1.download`, the host:
 
 1. Validates that the path exists and is a regular file (not a directory or unresolvable symlink)
 2. If validation fails, responds with `fs.v1.error` (with `correlationId` set to the request's envelope `id`)
-3. If validation succeeds, initiates a `file.v2.offer` to the requester as the sender — the envelope's `correlationId` MUST be set to the `id` of the originating `fs.v1.download` envelope
+3. If validation succeeds, initiates a file transfer offer to the requester as the sender — the envelope's `correlationId` MUST be set to the `id` of the originating `fs.v1.download` envelope. The offer message type depends on the effective Business Protocol Version:
+   - ≥ v1.15.0: `file.v3.offer`
+   - < v1.15.0: `file.v2.offer`
 
-The requester uses the `correlationId` on the incoming `file.v2.offer` to match it against a pending download request. When matched, the requester SHOULD auto-accept the offer without prompting the user. An offer without a recognized `correlationId` is treated as a normal unsolicited file transfer.
+The requester uses the `correlationId` on the incoming file transfer offer to match it against a pending download request. When matched, the requester SHOULD auto-accept the offer without prompting the user. An offer without a recognized `correlationId` is treated as a normal unsolicited file transfer.
 
-The standard file transfer v2 flow proceeds from there.
+The standard file transfer flow (v3 or v2, matching the offer version) proceeds from there.
 
 ### Notes
 
-- The host MUST NOT send any success acknowledgment for `fs.v1.download`; the `file.v2.offer` itself serves as implicit confirmation
-- If the file becomes unavailable between validation and transfer start, the host SHOULD send `file.v2.cancel`
-- The `file.v2.offer.fileName` SHOULD be the filename component of the requested path
+- The host MUST NOT send any success acknowledgment for `fs.v1.download`; the file transfer offer itself serves as implicit confirmation
+- If the file becomes unavailable between validation and transfer start, the host SHOULD send the corresponding cancel message (`file.v3.cancel` or `file.v2.cancel`)
+- The offer's `fileName` SHOULD be the filename component of the requested path
 
 ---
 
 ## fs.v1.upload
 
-Request authorization to upload one local file to an absolute destination path on the host. The requester MUST send this message before sending the associated `file.v2.offer`.
+Request authorization to upload one local file to an absolute destination path on the host. The requester MUST send this message before sending the associated file transfer offer (`file.v3.offer` or `file.v2.offer`, depending on the effective Business Protocol Version).
 
 ```json
 {
@@ -296,13 +298,13 @@ Upon receiving `fs.v1.upload`, the host:
 3. If validation fails, sends `fs.v1.error` with `correlationId` set to the request envelope `id` and MUST NOT create an upload authorization.
 4. If validation succeeds, creates a one-time pending upload authorization bound to the requesting device and destination path. It then sends `fs.v1.upload-ready` with `correlationId` set to the request envelope `id`.
 
-The requester MUST NOT send the associated `file.v2.offer` before receiving `fs.v1.upload-ready`. It MUST wait no longer than 60 seconds after sending `fs.v1.upload`. A correlated `fs.v1.error` fails the upload request immediately. If no correlated `fs.v1.upload-ready` arrives before the timeout, the requester MUST mark the upload request as failed and MUST NOT send an offer. It MUST ignore a matching `fs.v1.upload-ready` received after that timeout. After receiving a timely `fs.v1.upload-ready`, the requester initiates the standard `file.v2.offer` flow as sender. The offer's envelope `correlationId` MUST be the `id` of the originating `fs.v1.upload` envelope.
+The requester MUST NOT send the associated file transfer offer before receiving `fs.v1.upload-ready`. It MUST wait no longer than 60 seconds after sending `fs.v1.upload`. A correlated `fs.v1.error` fails the upload request immediately. If no correlated `fs.v1.upload-ready` arrives before the timeout, the requester MUST mark the upload request as failed and MUST NOT send an offer. It MUST ignore a matching `fs.v1.upload-ready` received after that timeout. After receiving a timely `fs.v1.upload-ready`, the requester initiates the standard file transfer offer flow as sender (`file.v3.offer` when effective version ≥ v1.15.0, otherwise `file.v2.offer`). The offer's envelope `correlationId` MUST be the `id` of the originating `fs.v1.upload` envelope.
 
-When receiving a `file.v2.offer` with a `correlationId`, the host MUST treat it as an authorized filesystem upload only if it matches an unexpired, unused pending upload authorization from the same device. A matching offer consumes the authorization. The host MUST validate the offer according to `file-transfer-v2.md`, including available storage, and MUST automatically accept it only if that validation succeeds; otherwise it MUST use the standard `file.v2` rejection flow. A missing, expired, or consumed authorization MUST NOT be consumed; the offer MUST instead be handled as a normal unsolicited file transfer.
+When receiving a file transfer offer (`file.v3.offer` or `file.v2.offer`) with a `correlationId`, the host MUST treat it as an authorized filesystem upload only if it matches an unexpired, unused pending upload authorization from the same device. A matching offer consumes the authorization. The host MUST validate the offer according to the applicable file transfer protocol document, including available storage, and MUST automatically accept it only if that validation succeeds; otherwise it MUST use the standard rejection flow. A missing, expired, or consumed authorization MUST NOT be consumed; the offer MUST instead be handled as a normal unsolicited file transfer.
 
-For an authorized upload, the destination path is exclusively the path recorded in the authorization. The host MUST NOT derive or replace that path from `file.v2.offer.payload.fileName`; `fileName` remains transfer metadata only. The host MUST write incoming data to a newly created temporary file in the authorized destination directory, then commit it to the authorized final path only after the standard `file.v2` checksum verification succeeds. The commit MUST be atomic and MUST fail if the final path already exists; it MUST NOT overwrite, replace, or follow a final-path symlink or reparse point. If the platform cannot provide an atomic no-replace commit for a destination, the host MUST reject the upload before accepting its offer.
+For an authorized upload, the destination path is exclusively the path recorded in the authorization. The host MUST NOT derive or replace that path from the offer's `fileName`; `fileName` remains transfer metadata only. The host MUST write incoming data to a newly created temporary file in the authorized destination directory, then commit it to the authorized final path only after the standard checksum verification succeeds. The commit MUST be atomic and MUST fail if the final path already exists; it MUST NOT overwrite, replace, or follow a final-path symlink or reparse point. If the platform cannot provide an atomic no-replace commit for a destination, the host MUST reject the upload before accepting its offer.
 
-The host MUST revalidate the destination directory and local write policy immediately before creating the temporary file and immediately before committing it. Path resolution at both points MUST prevent symlinks, reparse points, mounts, or concurrent filesystem changes from redirecting the write outside the path and policy validated for the authorization. If either revalidation or the atomic commit fails, the host MUST report transfer failure through the standard `file.v2` flow, preserve any pre-existing destination file, and remove the temporary file.
+The host MUST revalidate the destination directory and local write policy immediately before creating the temporary file and immediately before committing it. Path resolution at both points MUST prevent symlinks, reparse points, mounts, or concurrent filesystem changes from redirecting the write outside the path and policy validated for the authorization. If either revalidation or the atomic commit fails, the host MUST report transfer failure through the standard file transfer flow, preserve any pre-existing destination file, and remove the temporary file.
 
 ### fs.v1.upload-ready
 
@@ -317,7 +319,7 @@ No payload fields are required. Its envelope `correlationId` MUST reference the 
 
 ### Authorization Lifecycle
 
-- A pending upload authorization MUST expire 60 seconds after the host sends `fs.v1.upload-ready` if no matching `file.v2.offer` arrives.
+- A pending upload authorization MUST expire 60 seconds after the host sends `fs.v1.upload-ready` if no matching file transfer offer arrives.
 - The host MUST NOT maintain more than one unexpired, unused upload authorization for the same resolved destination path.
 - A host that cannot send either `fs.v1.upload-ready` or `fs.v1.error` leaves the requester to expire the request after its 60-second wait. It MUST NOT retain an upload authorization unless it successfully sends `fs.v1.upload-ready`.
 - A matching offer consumes the authorization before the host validates or accepts it. The authorization MUST NOT be reused, including after transfer rejection, cancellation, failure, or completion.
@@ -334,10 +336,10 @@ sequenceDiagram
     Uploader->>Host: fs.v1.upload { path }
     Host->>Uploader: fs.v1.upload-ready { correlationId: upload request id }
     Note right of Host: Creates one-time authorization
-    Uploader->>Host: file.v2.offer { correlationId: upload request id }
-    Host->>Uploader: file.v2.accept
-    Note over Uploader,Host: Standard file.v2 data transfer
-    Host->>Uploader: file.v2.done
+    Uploader->>Host: file.v3.offer / file.v2.offer { correlationId: upload request id }
+    Host->>Uploader: file.v3.accept / file.v2.accept
+    Note over Uploader,Host: Standard file transfer (v3 or v2) data transfer
+    Host->>Uploader: file.v3.done / file.v2.done
 ```
 
 ---

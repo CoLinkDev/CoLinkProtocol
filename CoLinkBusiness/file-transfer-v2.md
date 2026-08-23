@@ -1,5 +1,7 @@
 # File Transfer v2
 
+> **DEPRECATED** — Superseded by [File Transfer v3](file-transfer-v3.md) for peers with effective Business Protocol Version ≥ v1.15.0. This protocol remains in use when communicating with peers below v1.15.0.
+
 Transfer a single file between devices using control/data plane separation.
 
 ## Message Type

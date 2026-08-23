@@ -181,6 +181,7 @@ The route manager does not invent transparent fallback or retry behavior that ch
 - An operation that has not been sent may choose cloud when LAN is unavailable.
 - Once an operation has been sent on a route, its completion, retry, cancellation, duplicate prevention, and fallback behavior are defined by its Business Protocol document.
 - In particular, the File Transfer v2 protocol requires cancellation rather than automatic LAN-to-relay fallback after a failed dedicated LAN data-connection attempt.
+- The File Transfer v3 protocol (effective Business Protocol Version ≥ v1.15.0) applies the same rule: a failed LAN HTTPS data-connection attempt (including TLS certificate pinning failure) requires cancellation (`file.v3.cancel`) rather than automatic fallback to relay within the same session.
 - A transport failure must be reported to the feature owner with the selected route and failure class so that the feature can apply its protocol-defined behavior.
 
 This prevents a client from delivering duplicate commands or silently changing the semantics of a file, terminal, camera, or other stateful operation.

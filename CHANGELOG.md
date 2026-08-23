@@ -79,6 +79,19 @@
 
 ## Business Protocol
 
+### v1.15.0 — 2026-08-23
+
+- **File Transfer v3 (`CoLinkBusiness/file-transfer-v3.md`)**
+  - **New protocol:** Introduces `file.v3.*` messages, superseding `file.v2.*` for peers with effective Business Protocol Version ≥ v1.15.0. The control plane retains the same signaling model (`offer / accept / reject / cancel / ready / done`).
+  - **LAN data plane: HTTPS replaces binary WebSocket.** The sender registers `GET /transfer/v3/{sessionId}` on its P2P service port over TLS (token via `Authorization: Bearer` header). The receiver downloads the file via a standard HTTPS GET request. This eliminates the application-layer reliable transfer mechanism (windowing, ACK, retransmit) for LAN — TCP provides ordered, reliable delivery natively. Supports `Range` requests for resumption.
+  - **LAN transport security: TLS with control-plane certificate pinning.** The sender generates a temporary self-signed TLS certificate (ECDSA P-256, ECDHE key exchange, TLS 1.3 required / TLS 1.2 with ECDHE-ECDSA acceptable) and delivers its SHA-256 fingerprint to the receiver exclusively through the AEAD-protected direct P2P session (`file.v3.ready.certFingerprint`). The fingerprint MUST NOT be sent or accepted over Cloud Relay. LAN HTTPS is only selected when the session's control plane is bound to a direct P2P connection; otherwise relay mode is used regardless of LAN reachability. The P2P service port serves both plaintext `ws://` (existing peer protocol) and TLS (file transfer) by inspecting the first byte of each TCP connection; anti-downgrade rules prevent fallback to plaintext for `/transfer/v3/` paths.
+  - **Direction reversal:** In v2 the receiver exposed the data endpoint and the sender pushed data; in v3 the sender exposes the HTTPS endpoint and the receiver pulls data.
+  - **Relay mode unchanged:** Cloud relay continues using JSON `file.v3.chunk` / `file.v3.ack` / `file.v3.retransmit` / `file.v3.finish` on the main WebSocket with the same cumulative-ACK reliable transfer logic (send window default: 4). `file.v3.finish` explicitly signals the total chunk count so the receiver can confirm completeness before verifying the checksum.
+  - **Offer simplified:** `file.v3.offer` removes `totalChunks` and `chunkSize` fields — LAN mode transfers the complete file as a single HTTPS response; relay mode chunk size is implementation-defined and completeness is signaled by `file.v3.finish`.
+  - **Routing rule:** LAN HTTPS is selected only when both LAN-reachable and the session's control plane uses an AEAD direct P2P connection. LAN HTTPS connection failure (including TLS pinning failure) requires `file.v3.cancel`; no automatic LAN-to-relay fallback within the same session.
+  - **Security model:** `sessionId` (UUIDv4) + `transferToken` (CSPRNG-generated, ≥256-bit, base64url-encoded, session-scoped bearer credential sent via `Authorization: Bearer` header). Token is valid for the session lifetime (not consumed on first request), enabling HTTPS range-based resumption after connection interruption. Only one active HTTPS connection per session is permitted at a time.
+  - **Compatibility:** Requires effective Business Protocol Version ≥ v1.15.0. When communicating with peers below v1.15.0, implementations MUST use `file.v2.*`. `fs.v1.download` and `fs.v1.upload` use the file transfer version matching the effective Business Protocol Version.
+
 ### v1.14.0 — 2026-08-18
 
 - **Text Delivery Receipts (`CoLinkBusiness/text-message.md`)**

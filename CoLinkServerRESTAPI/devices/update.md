@@ -14,7 +14,7 @@ Header: `Authorization: Bearer <token>`
 
 | Field | Type   | Required | Description      |
 |-------|--------|----------|------------------|
-| name  | string | no       | New display name |
+| name  | string | no       | New display name: 1–100 Unicode code points, containing at least one non-whitespace character and no control characters |
 
 ```json
 {

@@ -45,10 +45,11 @@ Header: `Authorization: Bearer <token>`
 - Ticket is single-use: consumed on WebSocket connection
 - Ticket expires after 30 seconds if unused
 - Server validates that the device belongs to the authenticated user
+- Ticket issuance is limited independently per device over a rolling one-minute window. The recommended default limit is 20 tickets per device per minute; deployments MAY configure a different positive limit.
 
 ## Errors
 
 | Code | Message          | Description                              |
 |------|------------------|------------------------------------------|
 | 2010 | device not found | Device does not belong to this account   |
-| 3001 | rate limited     | Too many ticket requests (max 5/minute)  |
+| 3001 | rate limited     | The device exceeded the configured ticket issuance limit |

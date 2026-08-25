@@ -15,7 +15,7 @@ Header: `Authorization: Bearer <token>`
 | Field     | Type   | Required | Description                                           |
 |-----------|--------|----------|-------------------------------------------------------|
 | deviceId  | string | yes      | Client-generated UUID v4                              |
-| name      | string | yes      | Device display name                                   |
+| name      | string | yes      | Device display name: 1–100 Unicode code points, containing at least one non-whitespace character and no control characters |
 | type      | string | yes      | `windows` \| `android` \| `macos` \| `linux` \| `ios` |
 | publicKey | string | yes      | Device public key (base64), generated locally         |
 

@@ -4,6 +4,7 @@
 
 - Prefixed with `/api`
 - Authentication via `Authorization: Bearer <token>` header
+- Authenticated endpoints MUST reject an otherwise valid access token when its account is disabled, using `1030 unauthorized`.
 - Timestamps: ISO 8601 / Unix milliseconds
 - IDs: UUID v4
 - Response envelope: `{ "code": 0, "data": {...}, "message": "ok" }`

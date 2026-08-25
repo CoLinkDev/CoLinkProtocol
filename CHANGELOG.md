@@ -4,6 +4,18 @@
 
 ## Server Protocol
 
+### 2026-08-26
+
+- **Disabled-account authentication enforcement (`CoLinkServerRESTAPI/README.md`, `CoLinkServerRESTAPI/auth/refresh.md`)**
+  - Authenticated endpoints reject access tokens whose account is disabled. Refresh attempts for a disabled account return `1011 account disabled` and revoke all refresh tokens for that account.
+- **Per-device WebSocket ticket rate limit (`CoLinkServerRESTAPI/websocket/ticket.md`)**
+  - Replaces the account-wide 5 tickets/minute limit with a default rolling limit of 20 tickets/minute for each device. Deployments may configure another positive limit.
+- **Recommended Cloud WebSocket message limit (`CoLinkServerRESTAPI/websocket/v1.md`)**
+  - Adds `CLOUD_WEBSOCKET_RECOMMENDED_MAX_MESSAGE_BYTES` with a recommended server-side incoming-message limit of 8388608 bytes (8 MiB). The value is a deployment recommendation, not a negotiated protocol field; deployments may configure another positive limit.
+- **Device display-name validation (`CoLinkServerRESTAPI/devices/register.md`, `CoLinkServerRESTAPI/devices/update.md`)**
+  - Device display names are limited to 100 Unicode code points and may not be blank or contain control characters.
+- **Compatibility:** No wire schema or version-negotiation changes. The ticket and WebSocket message limits are relaxed by default. Invalid device names that could previously fail at persistence are now rejected explicitly with `4002 invalid parameter`; disabling an account now takes effect for existing access and refresh tokens.
+
 ### 2026-08-15
 
 - **Cloud WebSocket liveness (`CoLinkServerRESTAPI/websocket/v1.md`)**

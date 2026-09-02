@@ -91,6 +91,16 @@
 
 ## Business Protocol
 
+### v1.16.0 — 2026-09-02
+
+- **Display Control (`CoLinkBusiness/system-control.md`)**
+  - **New actions:** Adds `display-off` and `display-on` to `system-control.v1.command` for display power control.
+  - **`display-off`:** Turns off the host's display(s) / enters display sleep mode. The exact behavior is platform-dependent (may turn off backlight, enter DPMS standby, etc.).
+  - **`display-on`:** Wakes the host's display(s) from sleep mode. On some platforms this may require simulating user activity.
+  - **Best-effort execution:** Both actions are best-effort — the host SHOULD execute them using platform-specific APIs and MUST silently ignore the command if display control is unavailable on the current platform.
+  - **Parameters:** Display actions do not accept `volume` or `targetMac`; the host MUST silently ignore those fields when `action` is `display-off` or `display-on`.
+  - **Compatibility:** Requires Business Protocol Version ≥ 1.16.0. Controllers MUST check the peer's advertised version before sending `display-off` or `display-on`. Hosts below 1.16.0 silently ignore the unknown action values per existing forward-compatibility rules.
+
 ### v1.15.0 — 2026-08-23
 
 - **File Transfer v3 (`CoLinkBusiness/file-transfer-v3.md`)**

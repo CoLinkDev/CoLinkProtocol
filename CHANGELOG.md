@@ -91,6 +91,15 @@
 
 ## Business Protocol
 
+### v1.17.0 — 2026-09-02
+
+- **Command Acknowledgement (`CoLinkBusiness/system-control.md`)**
+  - **New message:** Adds `system-control.v1.ack` (host → controller), which acknowledges receipt, validation, and acceptance of a `system-control.v1.command`. The message has an empty payload `{}`. Its `correlationId` references the originating command envelope `id`.
+  - **Semantics:** The `ack` confirms that the command was accepted and processed (either executed immediately or scheduled for delayed execution). It does NOT confirm that the action succeeded, was observed by the user, or will complete. For delayed actions, no further message is sent when the scheduled action later executes or fails.
+  - **Command errors:** `system-control.v1.error` is extended to cover commands. New reasons `colink:system-control.command_rejected.v1` (platform capability unavailable, hardware not present, or preconditions not met) and `colink:system-control.command_failed.v1` (runtime error during execution or scheduling) report command failures. The host replies to a recognized command with exactly one of `ack` or `error`, and MUST NOT send either for a command it silently ignores.
+  - **Interaction model:** The command acknowledgement is best-effort — an `ack` may never arrive (loss or host going offline). Controllers MUST NOT rely on its arrival and MUST NOT automatically retransmit a command due to a missing `ack`. Old peers keep the legacy fire-and-forget behavior.
+  - **Compatibility:** Requires Business Protocol Version ≥ 1.17.0. The host acknowledges every recognized command only when both peers advertise version ≥ 1.17.0; otherwise it sends no reply. Hosts below 1.17.0 silently ignore the unknown `system-control.v1.ack` type per existing forward-compatibility rules; controllers MUST NOT expect an `ack` from such hosts.
+
 ### v1.16.0 — 2026-09-02
 
 - **Display Control (`CoLinkBusiness/system-control.md`)**

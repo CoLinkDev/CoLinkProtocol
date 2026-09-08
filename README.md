@@ -51,6 +51,27 @@ The `vx` in message type names (e.g. `business.v1.version`, `auth.v1.challenge`)
 
 P2P, Business, and Cloud WebSocket each follow their own semantic versioning rules declared in their respective documents. Modifying one protocol MUST NOT automatically bump either of the others.
 
+### Message Type Namespace vs Version Axis
+
+The namespace in a message type name (e.g., `business.v1.*`) does not always indicate which version axis governs it. The governing axis is determined by the message's **role in the protocol stack**, not its namespace:
+
+| Message Type | Namespace | Governed By | Reason |
+|--------------|-----------|-------------|--------|
+| `protocol.hello` | protocol | P2P Protocol Version | Transport handshake |
+| `auth.v1.challenge` | auth | P2P Protocol Version | Authentication flow |
+| `business.v1.version` | business | P2P Protocol Version | Business session setup |
+| `business.v1.key-exchange` | business | **P2P Protocol Version** | Encrypted session setup |
+| `message.v1.text` | message | Business Protocol Version | Application message |
+| `file.v3.offer` | file | Business Protocol Version | Application feature |
+| `relay` | (cloud) | Cloud WebSocket Protocol Version | Cloud transport |
+
+**Key principle**: Messages involved in transport-layer setup (handshake, authentication, encryption negotiation) are governed by the P2P Protocol Version, even if their namespace suggests otherwise. Application-layer feature messages are governed by the Business Protocol Version.
+
+Each protocol document specifies which version axis governs the messages it defines. When checking version compatibility in code, always use the correct version variable:
+- P2P layer: check `protocolVersion` (from `protocol.hello`)
+- Business layer: check `businessVersion` (from `business.v1.version`)
+- Cloud layer: check `wsVersion` (from WebSocket connection URL)
+
 ## Compatibility Rules
 
 - Adding backward-compatible capabilities bumps the minor version. Clarifications with no wire-level impact use a patch version. Breaking changes MUST bump the major version. If a change cannot satisfy both forward and backward compatibility, a new protocol version MUST be released.

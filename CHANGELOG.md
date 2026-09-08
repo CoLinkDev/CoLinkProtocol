@@ -1,6 +1,17 @@
 # Changelog
 
-<!-- This changelog is provided solely to trace protocol changes and is not a normative protocol specification. For the actual protocol requirements, read the referenced protocol documents. -->
+<!-- 
+IMPORTANT RULES:
+1. This changelog is provided solely to trace protocol changes and is not a normative 
+   protocol specification. For the actual protocol requirements, read the referenced 
+   protocol documents.
+   
+2. Published version sections are IMMUTABLE. Do not edit existing entries under released 
+   version headings. Append new changes or create new version sections instead.
+   
+3. See CoLinkProtocol/AGENTS.md for the full changelog policy.
+-->
+
 
 ## Server Protocol
 

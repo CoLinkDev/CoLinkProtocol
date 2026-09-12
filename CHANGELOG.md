@@ -15,6 +15,13 @@ IMPORTANT RULES:
 
 ## Server Protocol
 
+### 2026-09-12
+
+- **Cloud notes (`CoLinkServerRESTAPI/notes/`)**
+  - Adds account-scoped Markdown notes, multi-tag organization, reusable account-level attachments, on-demand authenticated downloads, storage-usage reporting, optimistic revision checks, consistent snapshots, and cursor-based incremental synchronization.
+  - Notes remain readable and editable offline. The server stores readable Markdown and attachment content with account isolation; attachment bodies are downloaded on demand rather than included in synchronization responses.
+  - Conflicting note writes use `If-Match` and return `412` instead of applying timestamp-based last-writer-wins behavior. Clients retain both sides and use three-way merge or explicit user resolution.
+
 ### 2026-08-26
 
 - **Disabled-account authentication enforcement (`CoLinkServerRESTAPI/README.md`, `CoLinkServerRESTAPI/auth/refresh.md`)**

@@ -33,7 +33,7 @@ Each device generates a local identity on first launch. A device identity consis
 
 ## Design Principles
 
-- Server protocol: HTTP REST + WebSocket, handles account system and message relay
+- Server protocol: HTTP REST + WebSocket, handles account system, account-scoped cloud data, and message relay
 - P2P protocol: peer discovery + WebSocket direct connection, handles device pairing
 - Business protocol: unified message format, transport-agnostic (works over both server relay and P2P direct connections)
 

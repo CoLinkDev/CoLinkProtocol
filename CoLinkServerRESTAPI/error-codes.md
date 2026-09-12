@@ -48,6 +48,8 @@ Notes:
 
 Compatibility note: assigning `2005 invalid device id` to invalid registration `deviceId` values is a breaking correction from the legacy overloaded `2003 invalid device id` response. Valid requests are unaffected. Clients MUST treat unknown nonzero codes as generic request failures; the server does not emit both legacy and replacement codes for one response.
 
+The Push API uses Bark-specific HTTP status rules. Its response body retains the CoLink error code from this registry, while the HTTP status is `400` for an invalid or unknown target and `500` for a delivery failure. These Push overrides are shown below; other endpoints use the default status.
+
 | Code | Message | HTTP Status | Description | Used By |
 |------|---------|-------------|-------------|---------|
 | 2001 | device limit reached | 400 | Max devices per account exceeded | [register device](devices/register.md) |
@@ -55,10 +57,10 @@ Compatibility note: assigning `2005 invalid device id` to invalid registration `
 | 2003 | invalid key | 400 | Public key format is invalid | [register device](devices/register.md), [rotate-key](devices/rotate-key.md) |
 | 2004 | device id conflict | 400 | The submitted deviceId already exists | [register device](devices/register.md) |
 | 2005 | invalid device id | 400 | The submitted `deviceId` is not a UUID v4 | [register device](devices/register.md) |
-| 2010 | device not found | 404 | Device does not exist or does not belong to this account | [delete device](devices/delete.md), [update device](devices/update.md), [rotate-key](devices/rotate-key.md), [ws/ticket](websocket/ticket.md), [push](push/README.md) |
-| 2011 | device offline | — | Device exists but has no active WebSocket connection | [push](push/README.md) |
-| 2012 | push not supported | — | Device is online but does not support Cloud WebSocket Protocol 1.1.0 Push capability | [push](push/README.md), [websocket/v1](websocket/v1.md) |
-| 2013 | push timeout | — | Push was delivered to the WebSocket but no ACK received within 10 seconds | [push](push/README.md) |
+| 2010 | device not found | 404; Push: 400 | Device does not exist or does not belong to this account | [delete device](devices/delete.md), [update device](devices/update.md), [rotate-key](devices/rotate-key.md), [ws/ticket](websocket/ticket.md), [push](push/README.md) |
+| 2011 | device offline | Push: 500 | Device exists but has no active WebSocket connection | [push](push/README.md) |
+| 2012 | push not supported | Push: 500 | Device is online but does not support Cloud WebSocket Protocol 1.1.0 Push capability | [push](push/README.md), [websocket/v1](websocket/v1.md) |
+| 2013 | push timeout | Push: 500 | Push was delivered to the WebSocket but no ACK received within 10 seconds | [push](push/README.md) |
 
 ## Update (5xxx)
 

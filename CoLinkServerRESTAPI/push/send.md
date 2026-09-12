@@ -84,6 +84,8 @@ curl -X POST https://server/api/push \
 
 Each device is processed independently. The response lists per-device results. Authorization is checked before processing the batch; an invalid token rejects the whole request with `1030 unauthorized`.
 
+A syntactically valid batch request returns HTTP `200` even when one or more devices fail. Each result carries the corresponding CoLink error code and message. Request-level failures use the [Push HTTP status rules](README.md#response-format).
+
 **Batch response:**
 ```json
 {
@@ -136,4 +138,4 @@ All parameters are optional unless required by the chosen path form. Parameters 
 
 ## Errors
 
-See [Error Codes](../error-codes.md).
+See the [Push HTTP status rules](README.md#response-format) and [Error Codes](../error-codes.md).

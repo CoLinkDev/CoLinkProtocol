@@ -29,6 +29,9 @@ IMPORTANT RULES:
 - **Error registry coverage clarification (`CoLinkServerRESTAPI/error-codes.md`, `CoLinkServerRESTAPI/auth/me.md`)**
   - Restores the full Notes storage-limit semantics, completes Notes error-code references, and clarifies that `/api/v1/me` authentication failures return `1030 unauthorized`.
   - **Compatibility:** Documentation-only correction; runtime behavior is unchanged.
+- **REST and Bark HTTP status alignment (`CoLinkServerRESTAPI/error-codes.md`, `CoLinkServerRESTAPI/push/`)**
+  - Defines the Push API's independent Bark-compatible HTTP behavior: invalid requests or targets use `400`, delivery failures use `500`, successful single pushes use `200`, and valid batch requests use `200` with per-device CoLink result codes. Authentication remains a CoLink extension and uses `401`.
+  - **Compatibility:** Response schemas and CoLink error-code values are unchanged, so clients that inspect the body remain compatible. This is a breaking HTTP-status correction for clients that depend on the server's previous `409`, `403`, or Push `200` responses. Clients SHOULD treat any nonzero response-body code as failure because older servers may still return the legacy HTTP status.
 
 ### 2026-09-12
 

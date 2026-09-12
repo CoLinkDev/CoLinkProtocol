@@ -49,4 +49,9 @@ Header: `Authorization: Bearer <token>`
 
 ## Errors
 
-See [Error Codes](../error-codes.md).
+| HTTP Status | Code | Condition |
+|-------------|------|-----------|
+| 404 | 2010 | The device does not exist or does not belong to the authenticated account. |
+| 429 | 3001 | The device exceeded the configured ticket issuance limit. |
+
+See [Error Codes](../error-codes.md) for authentication errors and the canonical code definitions.

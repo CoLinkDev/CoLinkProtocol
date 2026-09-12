@@ -32,6 +32,9 @@ IMPORTANT RULES:
 - **REST and Bark HTTP status alignment (`CoLinkServerRESTAPI/error-codes.md`, `CoLinkServerRESTAPI/push/`)**
   - Defines the Push API's independent Bark-compatible HTTP behavior: invalid requests or targets use `400`, delivery failures use `500`, successful single pushes use `200`, and valid batch requests use `200` with per-device CoLink result codes. Authentication remains a CoLink extension and uses `401`.
   - **Compatibility:** Response schemas and CoLink error-code values are unchanged, so clients that inspect the body remain compatible. This is a breaking HTTP-status correction for clients that depend on the server's previous `409`, `403`, or Push `200` responses. Clients SHOULD treat any nonzero response-body code as failure because older servers may still return the legacy HTTP status.
+- **Endpoint error-condition coverage (`CoLinkServerRESTAPI/update/tauri.md`, `CoLinkServerRESTAPI/websocket/ticket.md`)**
+  - Restores the endpoint-specific conditions for Tauri update errors and WebSocket ticket rate limiting while retaining the central error-code registry as the canonical definition.
+  - **Compatibility:** The Tauri endpoint now validates `currentVersion` for a supported target before querying release metadata, so an invalid version consistently returns `4002 invalid parameter` even when no release is available. Valid requests, response schemas, and error-code values are unchanged.
 
 ### 2026-09-12
 

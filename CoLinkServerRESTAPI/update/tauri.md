@@ -20,7 +20,7 @@ No authentication required.
 
 ## Response
 
-This endpoint returns the Tauri Updater manifest directly. It does not use the standard REST response envelope.
+On success, this endpoint returns the Tauri Updater manifest directly and does not use the standard REST success envelope. Error responses use the standard REST error envelope.
 
 ```json
 {
@@ -46,4 +46,9 @@ The endpoint returns `204 No Content` when there is no newer version, the target
 
 ## Errors
 
-See [Error Codes](../error-codes.md).
+| HTTP Status | Code | Condition |
+|-------------|------|-----------|
+| 400 | 4002 | `currentVersion` is not a valid semantic version. |
+| 500 | -1 | Failed to query release metadata or read cached update artifacts. |
+
+See [Error Codes](../error-codes.md) for the canonical code definitions.

@@ -26,6 +26,9 @@ IMPORTANT RULES:
 - **Device registration error-code correction (`CoLinkServerRESTAPI/error-codes.md`)**
   - Invalid registration `deviceId` values now return `2005 invalid device id`; `2003 invalid key` is reserved for malformed device public keys in registration and key rotation.
   - **Compatibility:** This is a breaking correction for clients that match the legacy overloaded `2003` code after submitting an invalid UUID v4. Valid requests are unaffected. Current CoLink clients treat non-authentication errors generically and require no compatibility change; other clients must treat unknown nonzero codes as generic request failures. The server returns only `2005` for this condition and does not retain the ambiguous legacy response.
+- **Error registry coverage clarification (`CoLinkServerRESTAPI/error-codes.md`, `CoLinkServerRESTAPI/auth/me.md`)**
+  - Restores the full Notes storage-limit semantics, completes Notes error-code references, and clarifies that `/api/v1/me` authentication failures return `1030 unauthorized`.
+  - **Compatibility:** Documentation-only correction; runtime behavior is unchanged.
 
 ### 2026-09-12
 

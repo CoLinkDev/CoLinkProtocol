@@ -72,13 +72,13 @@ Compatibility note: assigning `2005 invalid device id` to invalid registration `
 
 | Code | Message | HTTP Status | Description | Used By |
 |------|---------|-------------|-------------|---------|
-| 6001 | note not found | 404 | Note does not exist, has been deleted, or does not belong to the current account | [get-note](notes/notes-and-tags/get-note.md) |
-| 6002 | revision conflict | 412 | `baseRevision` does not match the current version | [update-note](notes/notes-and-tags/update-note.md), [update-tag](notes/notes-and-tags/update-tag.md) |
-| 6003 | tag not found | 404 | Tag does not exist, has been deleted, or does not belong to the current account | [list-notes](notes/notes-and-tags/list-notes.md) |
+| 6001 | note not found | 404 | Note does not exist, has been deleted, or does not belong to the current account | [get-note](notes/notes-and-tags/get-note.md), [update-note](notes/notes-and-tags/update-note.md), [delete-note](notes/notes-and-tags/delete-note.md) |
+| 6002 | revision conflict | 412 | `baseRevision` does not match the current version | [update-note](notes/notes-and-tags/update-note.md), [delete-note](notes/notes-and-tags/delete-note.md), [update-tag](notes/notes-and-tags/update-tag.md), [delete-tag](notes/notes-and-tags/delete-tag.md) |
+| 6003 | tag not found | 404 | Tag does not exist, has been deleted, or does not belong to the current account | [list-notes](notes/notes-and-tags/list-notes.md), [update-tag](notes/notes-and-tags/update-tag.md), [delete-tag](notes/notes-and-tags/delete-tag.md) |
 | 6004 | tag name conflict | 409 | A tag with the same normalized name already exists in the account | [create-tag](notes/notes-and-tags/create-tag.md), [update-tag](notes/notes-and-tags/update-tag.md) |
 | 6005 | attachment not found | 404 | Attachment does not exist or does not belong to the current account | [get attachment](notes/attachments/get.md), [download attachment](notes/attachments/download.md), [delete attachment](notes/attachments/delete.md), [attachment references](notes/attachments/references.md) |
 | 6006 | attachment in use | 409 | Attachment is still referenced by one or more notes | [delete attachment](notes/attachments/delete.md) |
-| 6007 | note storage limit reached | 413 | File exceeds max attachment size or account remaining space is insufficient | [upload attachment](notes/attachments/upload.md) |
-| 6008 | invalid note reference | 409 | `tagIds` or `attachmentIds` contains an invalid, deleted, or misowned resource | [create-note](notes/notes-and-tags/create-note.md), [update-note](notes/notes-and-tags/update-note.md), [delete-tag](notes/notes-and-tags/delete-tag.md) |
-| 6009 | sync cursor expired | 410 | Incremental sync cursor has expired; client must perform a full snapshot sync | — |
+| 6007 | note storage limit reached | 413 | A configured per-item limit or the account's Notes storage quota has been reached | [Notes limits](notes/README.md#容量与分页), [upload attachment](notes/attachments/upload.md) |
+| 6008 | invalid note reference | 409 | `tagIds` or `attachmentIds` contains an invalid, deleted, or misowned resource | [create-note](notes/notes-and-tags/create-note.md), [update-note](notes/notes-and-tags/update-note.md), [delete-tag](notes/notes-and-tags/delete-tag.md), [delete attachment](notes/attachments/delete.md) |
+| 6009 | sync cursor expired | 410 | Incremental sync cursor has expired; client must perform a full snapshot sync | [incremental sync](notes/notes-and-tags/README.md#增量变化) |
 | 6010 | attachment checksum mismatch | 422 | Uploaded content SHA-256 does not match the `sha256` in the request | [upload attachment](notes/attachments/upload.md) |

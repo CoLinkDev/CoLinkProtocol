@@ -30,4 +30,4 @@ GET /api/v1/note-attachments/:attachmentId/content
 
 服务器 MUST 支持单区间 HTTP Range 请求和 `If-None-Match`。完整内容返回 HTTP `200`；Range 成功时返回 HTTP `206` 并设置 `Content-Range`；缓存仍有效时返回 HTTP `304`；无效或多区间 Range 返回 HTTP `416`。
 
-附件不存在或不属于当前账户时，以通用 JSON 错误封装返回 `5005 attachment not found`。
+附件不存在或不属于当前账户时，以通用 JSON 错误封装返回 `6005 attachment not found`。

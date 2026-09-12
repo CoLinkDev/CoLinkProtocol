@@ -14,4 +14,4 @@ GET /api/v1/notes/:noteId
 
 ## Response
 
-成功响应的 `data` 为完整 [`Note`](README.md#note)。已删除的笔记返回 `5001 note not found`。
+成功响应的 `data` 为完整 [`Note`](README.md#note)。已删除的笔记返回 `6001 note not found`。

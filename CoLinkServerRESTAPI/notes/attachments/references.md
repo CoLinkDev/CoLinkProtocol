@@ -32,5 +32,5 @@ GET /api/v1/note-attachments/:attachmentId/references?pageToken=<opaque>&limit=1
 }
 ```
 
-`noteIds` 按字典序稳定排列。`nextPageToken` 为 `null` 表示已返回全部引用。附件不存在、已删除或不属于当前账户时返回 `5005 attachment not found`。
+`noteIds` 按字典序稳定排列。`nextPageToken` 为 `null` 表示已返回全部引用。附件不存在、已删除或不属于当前账户时返回 `6005 attachment not found`。
 

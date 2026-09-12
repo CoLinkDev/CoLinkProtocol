@@ -19,6 +19,6 @@ PUT /api/v1/note-tags/:tagId
 
 ## Response
 
-版本不匹配返回 `5002 revision conflict`。成功时返回 `revision + 1` 的完整 [`Tag`](README.md#tag)。
+版本不匹配返回 `6002 revision conflict`。成功时返回 `revision + 1` 的完整 [`Tag`](README.md#tag)。
 
-两台离线设备以不同 `tagId` 创建规范化后同名的标签时，后提交的一方收到 `5004 tag name conflict`。该客户端 MUST 从标签列表中找到已有标签，将本地待同步笔记引用改为已有 `tagId`，并放弃重复的本地标签。
+两台离线设备以不同 `tagId` 创建规范化后同名的标签时，后提交的一方收到 `6004 tag name conflict`。该客户端 MUST 从标签列表中找到已有标签，将本地待同步笔记引用改为已有 `tagId`，并放弃重复的本地标签。

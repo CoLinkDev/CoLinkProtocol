@@ -16,5 +16,5 @@ GET /api/v1/note-attachments/:attachmentId
 
 ## Response
 
-成功响应的 `data` 为完整 [`Attachment`](README.md#attachment)。附件不存在或不属于当前账户时返回 `5005 attachment not found`。
+成功响应的 `data` 为完整 [`Attachment`](README.md#attachment)。附件不存在或不属于当前账户时返回 `6005 attachment not found`。
 

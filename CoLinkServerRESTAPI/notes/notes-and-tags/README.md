@@ -171,11 +171,11 @@ GET /api/v1/notes/sync/changes?cursor=<opaque>&limit=100
 
 变更按账户变更序号严格递增返回。服务器 MAY 合并同一资源的连续变化；`upsert` 返回查询时的当前资源，因此其 `revision` 可以高于触发该条变更的版本。客户端 MUST 按顺序应用一页并原子保存 `nextCursor`，然后在 `hasMore=true` 时继续拉取。重复收到已经应用的 `revision` 必须安全忽略。
 
-服务器可压缩旧变更日志。游标已失效时返回 `5009 sync cursor expired`，客户端保留本地待上传修改并重新执行完整快照。
+服务器可压缩旧变更日志。游标已失效时返回 `6009 sync cursor expired`，客户端保留本地待上传修改并重新执行完整快照。
 
 ### 写入与冲突
 
-客户端本地使用 `baseRevision` 记录编辑所基于的版本。更新请求在 JSON 请求体中发送该值，删除请求通过 query 参数发送该值。服务器当前 `revision` 与其相同才可写入；否则返回 HTTP `412 Precondition Failed` 和 `5002 revision conflict`，不得进行最后写入者覆盖。
+客户端本地使用 `baseRevision` 记录编辑所基于的版本。更新请求在 JSON 请求体中发送该值，删除请求通过 query 参数发送该值。服务器当前 `revision` 与其相同才可写入；否则返回 HTTP `412 Precondition Failed` 和 `6002 revision conflict`，不得进行最后写入者覆盖。
 
 笔记冲突时客户端使用以下三份内容做三方合并：
 
@@ -193,7 +193,7 @@ Markdown 使用文本三方合并；标题、`tagIds` 和 `attachmentIds` 分别
 
 ### 无效引用恢复
 
-笔记写入返回 `5008 invalid note reference` 时，表示请求中的标签或附件已经删除、不属于当前账户或不可用。客户端 MUST：
+笔记写入返回 `6008 invalid note reference` 时，表示请求中的标签或附件已经删除、不属于当前账户或不可用。客户端 MUST：
 
 1. 拉取增量变化，并重新获取当前有效标签及相关附件元数据。
 2. 从待上传笔记中移除已经删除的标签。附件缺失且本地文件仍存在时，使用新的 `attachmentId` 重新上传；本地文件也不存在时，移除对应的 Markdown 引用和 `attachmentIds` 项并提示用户。

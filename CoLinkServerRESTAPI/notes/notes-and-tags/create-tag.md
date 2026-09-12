@@ -15,4 +15,4 @@ POST /api/v1/note-tags
 
 ## Response
 
-成功返回完整 [`Tag`](README.md#tag)，初始 `revision` 为 1。同名标签返回 `5004 tag name conflict`。
+成功返回完整 [`Tag`](README.md#tag)，初始 `revision` 为 1。同名标签返回 `6004 tag name conflict`。

@@ -38,7 +38,8 @@ Positive error-code ranges are allocated as follows:
 | `2xxx` | Device module |
 | `3xxx` | Reserved for global rate, quota, and request-policy errors |
 | `4xxx` | Reserved for global request parsing and parameter-validation errors |
-| `5xxx` | Notes module |
+| `5xxx` | Update module |
+| `6xxx` | Notes module |
 
 Future modules MUST use an unallocated range and MUST NOT define module errors in the reserved `3xxx` or `4xxx` ranges.
 

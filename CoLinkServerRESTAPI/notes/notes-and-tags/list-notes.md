@@ -14,7 +14,7 @@ GET /api/v1/notes?tagId=<uuid>&pageToken=<opaque>&limit=100
 | `pageToken` | query | string | 否 | 服务器签发的不透明分页令牌，客户端 MUST 原样回传 |
 | `limit` | query | integer | 否 | `1..500`，默认 100 |
 
-笔记按 `updatedAt` 降序、`noteId` 升序稳定排列。此接口用于界面浏览；客户端初次同步 MUST 使用快照接口。`pageToken` 与首次请求的筛选条件绑定，改变 `tagId` 或 `limit` 后不得继续使用原令牌。不存在的 `tagId` 返回 `5003 tag not found`。
+笔记按 `updatedAt` 降序、`noteId` 升序稳定排列。此接口用于界面浏览；客户端初次同步 MUST 使用快照接口。`pageToken` 与首次请求的筛选条件绑定，改变 `tagId` 或 `limit` 后不得继续使用原令牌。不存在的 `tagId` 返回 `6003 tag not found`。
 
 ## Response
 

@@ -20,7 +20,7 @@ Content-Type: multipart/form-data
 | `sha256` | string | 是 | 客户端计算的 SHA-256 小写十六进制摘要 |
 | `file` | binary | 是 | 原始文件，文件名和 MIME type 取自该 part；文件名必须为有效 UTF-8、不得含控制字符 |
 
-服务器 MUST 流式读取文件并计算大小和 SHA-256。文件超过服务器当前最大附件策略大小或账户剩余空间不足时返回 `5007 note storage limit reached`；摘要不匹配时返回 `5010 attachment checksum mismatch`。失败请求不得保留不完整文件。
+服务器 MUST 流式读取文件并计算大小和 SHA-256。文件超过服务器当前最大附件策略大小或账户剩余空间不足时返回 `6007 note storage limit reached`；摘要不匹配时返回 `6010 attachment checksum mismatch`。失败请求不得保留不完整文件。
 
 ## Response
 

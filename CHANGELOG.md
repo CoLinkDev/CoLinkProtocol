@@ -15,6 +15,12 @@ IMPORTANT RULES:
 
 ## Server Protocol
 
+### 2026-09-13
+
+- **Cloud notes error-code allocation (`CoLinkServerRESTAPI/README.md`, `CoLinkServerRESTAPI/notes/`)**
+  - Moves Cloud Notes errors from the conflicting Update module `5xxx` range to the dedicated `6xxx` range without changing their relative meanings.
+  - **Compatibility:** This changes Cloud Notes error-code values. Clients that consume the earlier `5xxx` values must recognize the corresponding `6xxx` values; valid request and response schemas are unchanged.
+
 ### 2026-09-12
 
 - **Cloud notes (`CoLinkServerRESTAPI/notes/`)**

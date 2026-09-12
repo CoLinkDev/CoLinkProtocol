@@ -46,12 +46,15 @@ Notes:
 
 ## Device (2xxx)
 
+Compatibility note: assigning `2005 invalid device id` to invalid registration `deviceId` values is a breaking correction from the legacy overloaded `2003 invalid device id` response. Valid requests are unaffected. Clients MUST treat unknown nonzero codes as generic request failures; the server does not emit both legacy and replacement codes for one response.
+
 | Code | Message | HTTP Status | Description | Used By |
 |------|---------|-------------|-------------|---------|
 | 2001 | device limit reached | 400 | Max devices per account exceeded | [register device](devices/register.md) |
 | 2002 | invalid device type | 400 | Unsupported device type | [register device](devices/register.md) |
-| 2003 | invalid key / invalid device id | 400 | Public key format is invalid, or a registration `deviceId` is not a UUID v4 | [register device](devices/register.md), [rotate-key](devices/rotate-key.md) |
+| 2003 | invalid key | 400 | Public key format is invalid | [register device](devices/register.md), [rotate-key](devices/rotate-key.md) |
 | 2004 | device id conflict | 400 | The submitted deviceId already exists | [register device](devices/register.md) |
+| 2005 | invalid device id | 400 | The submitted `deviceId` is not a UUID v4 | [register device](devices/register.md) |
 | 2010 | device not found | 404 | Device does not exist or does not belong to this account | [delete device](devices/delete.md), [update device](devices/update.md), [rotate-key](devices/rotate-key.md), [ws/ticket](websocket/ticket.md), [push](push/README.md) |
 | 2011 | device offline | — | Device exists but has no active WebSocket connection | [push](push/README.md) |
 | 2012 | push not supported | — | Device is online but does not support Cloud WebSocket Protocol 1.1.0 Push capability | [push](push/README.md), [websocket/v1](websocket/v1.md) |

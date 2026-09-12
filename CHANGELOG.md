@@ -23,6 +23,9 @@ IMPORTANT RULES:
 - **Central error-code registry (`CoLinkServerRESTAPI/error-codes.md`)**
   - Consolidates global and module-specific REST API error codes into one registry and replaces duplicated endpoint tables with links to the authoritative definitions.
   - **Compatibility:** Documentation-only reorganization; error envelopes and runtime behavior are unchanged.
+- **Device registration error-code correction (`CoLinkServerRESTAPI/error-codes.md`)**
+  - Invalid registration `deviceId` values now return `2005 invalid device id`; `2003 invalid key` is reserved for malformed device public keys in registration and key rotation.
+  - **Compatibility:** This is a breaking correction for clients that match the legacy overloaded `2003` code after submitting an invalid UUID v4. Valid requests are unaffected. Current CoLink clients treat non-authentication errors generically and require no compatibility change; other clients must treat unknown nonzero codes as generic request failures. The server returns only `2005` for this condition and does not retain the ambiguous legacy response.
 
 ### 2026-09-12
 

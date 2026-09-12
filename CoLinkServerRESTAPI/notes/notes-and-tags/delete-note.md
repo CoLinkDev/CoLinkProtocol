@@ -1,4 +1,4 @@
-# 删除笔记
+# Delete Note
 
 ## Endpoint
 
@@ -8,12 +8,12 @@ DELETE /api/v1/notes/:noteId?baseRevision=<revision>
 
 ## Request
 
-| 参数 | 位置 | 类型 | 必需 | 说明 |
-|------|------|------|------|------|
-| `noteId` | path | UUID v4 | 是 | 笔记 ID |
-| `baseRevision` | query | integer | 是 | 删除所基于的笔记版本 |
+| Parameter | Location | Type | Required | Description |
+|-----------|----------|------|----------|-------------|
+| `noteId` | path | UUID v4 | Yes | Note ID |
+| `baseRevision` | query | integer | Yes | Note revision on which the deletion is based |
 
-删除是同步语义上的软删除，MUST 生成 `revision + 1` 的删除事件。服务器可在变更日志保留期后清理正文和未引用附件。
+Deletion is a soft delete for synchronization purposes and MUST generate a deletion event with `revision + 1`. The server may remove the note body and unreferenced attachments after the change-log retention period.
 
 ## Response
 

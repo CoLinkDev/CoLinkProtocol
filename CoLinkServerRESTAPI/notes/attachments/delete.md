@@ -1,6 +1,6 @@
-# 删除未关联的笔记附件
+# Delete Unassociated Note Attachment
 
-删除一个尚未关联或已解除关联的附件。
+Deletes an attachment that has never been associated or has been disassociated from all notes.
 
 ## Endpoint
 
@@ -10,9 +10,9 @@ DELETE /api/v1/note-attachments/:attachmentId
 
 ## Request
 
-| 参数 | 位置 | 类型 | 必需 | 说明 |
-|------|------|------|------|------|
-| `attachmentId` | path | UUID v4 | 是 | 要删除的附件 ID |
+| Parameter | Location | Type | Required | Description |
+|-----------|----------|------|----------|-------------|
+| `attachmentId` | path | UUID v4 | Yes | ID of the attachment to delete |
 
 ## Response
 
@@ -24,10 +24,10 @@ DELETE /api/v1/note-attachments/:attachmentId
 }
 ```
 
-附件仍被笔记引用时返回 `6006 attachment in use`。客户端可调用[查询附件引用 API](references.md)获取需要解除关联的 `noteId`。附件不存在或不属于当前账户时返回 `6005 attachment not found`。
+If the attachment is still referenced by a note, the server returns `6006 attachment in use`. The client can call the [attachment references API](references.md) to obtain the `noteId` values whose associations must be removed. If the attachment does not exist or does not belong to the current account, the server returns `6005 attachment not found`.
 
-服务器 MUST 将附件删除和笔记附件关联更新串行化，并在删除事务内再次检查引用关系。删除提交后，任何尝试关联该附件的笔记写入返回 `6008 invalid note reference`。
+The server MUST serialize attachment deletion with updates to note attachment associations and recheck references within the deletion transaction. After deletion commits, any note write that attempts to associate the attachment returns `6008 invalid note reference`.
 
-移除笔记附件的正确顺序是：先更新笔记的 `markdown` 和 `attachmentIds`，成功后再删除附件。客户端也可不显式删除，等待服务器在未关联附件保留期结束后清理。
+The correct sequence for removing a note attachment is to update the note's `markdown` and `attachmentIds` first, then delete the attachment after the update succeeds. A client may also omit explicit deletion and allow the server to remove the attachment after the unassociated-attachment retention period.
 
-删除成功后，服务器 MUST 保留该 `attachmentId` 的永久墓碑。同一账户不得再次上传或关联该 ID，具体规则见[附件生命周期](README.md#生命周期)。
+After successful deletion, the server MUST retain a permanent tombstone for the `attachmentId`. The ID MUST NOT be uploaded or associated again in the same account. See [Attachment Lifecycle](README.md#lifecycle) for the complete rules.

@@ -1,6 +1,6 @@
-# 查询笔记附件引用
+# List Note Attachment References
 
-查询当前账户中所有引用指定附件的有效笔记，用于在删除共享附件前解除关联。
+Lists all active notes in the current account that reference the specified attachment, so those associations can be removed before deleting a shared attachment.
 
 ## Endpoint
 
@@ -10,11 +10,11 @@ GET /api/v1/note-attachments/:attachmentId/references?pageToken=<opaque>&limit=1
 
 ## Request
 
-| 参数 | 位置 | 类型 | 必需 | 说明 |
-|------|------|------|------|------|
-| `attachmentId` | path | UUID v4 | 是 | 附件 ID |
-| `pageToken` | query | string | 否 | 服务器签发的不透明分页令牌，客户端 MUST 原样回传 |
-| `limit` | query | integer | 否 | `1..500`，默认 100 |
+| Parameter | Location | Type | Required | Description |
+|-----------|----------|------|----------|-------------|
+| `attachmentId` | path | UUID v4 | Yes | Attachment ID |
+| `pageToken` | query | string | No | Opaque pagination token issued by the server; the client MUST return it unchanged |
+| `limit` | query | integer | No | `1..500`; defaults to 100 |
 
 ## Response
 
@@ -32,5 +32,4 @@ GET /api/v1/note-attachments/:attachmentId/references?pageToken=<opaque>&limit=1
 }
 ```
 
-`noteIds` 按字典序稳定排列。`nextPageToken` 为 `null` 表示已返回全部引用。附件不存在、已删除或不属于当前账户时返回 `6005 attachment not found`。
-
+`noteIds` is stably sorted in lexicographic order. A `null` `nextPageToken` means all references have been returned. If the attachment does not exist, has been deleted, or does not belong to the current account, the server returns `6005 attachment not found`.

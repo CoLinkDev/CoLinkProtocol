@@ -1,4 +1,4 @@
-# 创建标签
+# Create Tag
 
 ## Endpoint
 
@@ -8,11 +8,11 @@ POST /api/v1/note-tags
 
 ## Request
 
-| 字段 | 类型 | 必需 | 说明 |
-|------|------|------|------|
-| `tagId` | UUID v4 | 是 | 客户端生成，支持离线创建 |
-| `name` | string | 是 | 去除首尾空白后不得为空 |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `tagId` | UUID v4 | Yes | Client-generated; supports offline creation |
+| `name` | string | Yes | Must not be empty after trimming leading and trailing whitespace |
 
 ## Response
 
-成功返回完整 [`Tag`](README.md#tag)，初始 `revision` 为 1。同名标签返回 `6004 tag name conflict`。
+On success, the server returns the complete [`Tag`](README.md#tag) with an initial `revision` of 1. A duplicate tag name returns `6004 tag name conflict`.

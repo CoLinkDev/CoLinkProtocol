@@ -1,6 +1,6 @@
-# 上传笔记附件
+# Upload Note Attachment
 
-暂存一张图片或一个普通附件。附件在后续创建或更新笔记时通过 `attachmentIds` 关联，可由当前账户的多篇笔记复用。
+Stages an image or another attachment. The attachment is associated through `attachmentIds` when a note is later created or updated and can be reused by multiple notes in the current account.
 
 ## Endpoint
 
@@ -11,20 +11,20 @@ Content-Type: multipart/form-data
 
 ## Request
 
-除通用请求头外，请求包含以下 multipart parts：
+In addition to the common request headers, the request contains the following multipart parts:
 
-| Part | 类型 | 必需 | 说明 |
-|------|------|------|------|
-| `attachmentId` | UUID v4 | 是 | 客户端生成，支持离线上传队列 |
-| `kind` | string | 是 | `image` 或 `file` |
-| `sha256` | string | 是 | 客户端计算的 SHA-256 小写十六进制摘要 |
-| `file` | binary | 是 | 原始文件，文件名和 MIME type 取自该 part；文件名必须为有效 UTF-8、不得含控制字符 |
+| Part | Type | Required | Description |
+|------|------|----------|-------------|
+| `attachmentId` | UUID v4 | Yes | Client-generated; supports offline upload queues |
+| `kind` | string | Yes | `image` or `file` |
+| `sha256` | string | Yes | Client-computed lowercase hexadecimal SHA-256 digest |
+| `file` | binary | Yes | Raw file; the file name and MIME type come from this part. The file name must be valid UTF-8 and contain no control characters |
 
-服务器 MUST 流式读取文件并计算大小和 SHA-256。文件超过服务器当前最大附件策略大小或账户剩余空间不足时返回 `6007 note storage limit reached`；摘要不匹配时返回 `6010 attachment checksum mismatch`。失败请求不得保留不完整文件。
+The server MUST stream the file while calculating its size and SHA-256 digest. If the file exceeds the server's current maximum attachment size or the account has insufficient remaining capacity, the server returns `6007 note storage limit reached`. A digest mismatch returns `6010 attachment checksum mismatch`. A failed request MUST NOT leave an incomplete file behind.
 
 ## Response
 
-成功响应的 `data` 为完整 [`Attachment`](README.md#attachment)。以下示例上传文件是内容为 `hello`、不含换行符的 5 字节 UTF-8 文本：
+The `data` in a successful response is a complete [`Attachment`](README.md#attachment). The file in the following example is the 5-byte UTF-8 text `hello` with no trailing newline:
 
 ```json
 {
@@ -42,4 +42,4 @@ Content-Type: multipart/form-data
 }
 ```
 
-相同账户中已存在或曾经使用过该 `attachmentId` 时返回 `4002 invalid parameter`。上传结果不确定时，客户端 MUST 先查询该附件的元数据：`kind`、`size` 和 `sha256` 均与待上传文件一致即可视为上传成功；附件不存在时才重新上传；字段不一致时作为 ID 冲突处理，不得覆盖已有附件。
+If the `attachmentId` already exists or was previously used in the same account, the server returns `4002 invalid parameter`. When the upload outcome is uncertain, the client MUST first query the attachment metadata. If `kind`, `size`, and `sha256` all match the file being uploaded, the upload is considered successful. The client retries the upload only if the attachment does not exist. A field mismatch is treated as an ID conflict, and the existing attachment MUST NOT be overwritten.

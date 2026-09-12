@@ -1,6 +1,6 @@
-# 获取笔记存储用量
+# Get Notes Storage Usage
 
-获取当前账户的笔记存储用量、剩余空间和协议单项限制。客户端 SHOULD 在展示存储管理界面或准备上传大附件前调用此接口。
+Returns Notes storage usage, remaining capacity, and per-item protocol limits for the current account. Clients SHOULD call this endpoint before displaying storage management or preparing to upload a large attachment.
 
 ## Endpoint
 
@@ -10,7 +10,7 @@ GET /api/v1/notes/storage
 
 ## Request
 
-无请求参数，仅需通用 `Authorization` Header。
+There are no request parameters. Only the common `Authorization` header is required.
 
 ## Response
 
@@ -30,15 +30,14 @@ GET /api/v1/notes/storage
 }
 ```
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `usedBytes` | integer | 计入配额的已用总字节数 |
-| `limitBytes` | integer | 账户笔记总容量 |
+| Field | Type | Description |
+|-------|------|-------------|
+| `usedBytes` | integer | Total bytes used against the quota |
+| `limitBytes` | integer | Total Notes capacity for the account |
 | `remainingBytes` | integer | `max(limitBytes - usedBytes, 0)` |
-| `attachmentBytes` | integer | 所有附件占用的字节数，包括仍在保留期内的未关联附件 |
-| `markdownBytes` | integer | 所有有效笔记 Markdown 的 UTF-8 字节数 |
-| `maxAttachmentBytes` | integer | 单个附件允许的最大字节数 |
-| `maxMarkdownBytes` | integer | 单篇 Markdown 允许的最大 UTF-8 字节数 |
+| `attachmentBytes` | integer | Bytes used by all attachments, including unassociated attachments still within their retention period |
+| `markdownBytes` | integer | UTF-8 byte length of Markdown across all active notes |
+| `maxAttachmentBytes` | integer | Maximum permitted size of one attachment in bytes |
+| `maxMarkdownBytes` | integer | Maximum permitted UTF-8 byte length of one note's Markdown |
 
-`usedBytes` MUST 等于 `attachmentBytes + markdownBytes`。数据库索引、标签、标题和内部元数据不计入用户可见配额。服务器执行写入容量检查时 MUST 使用与本接口相同的计算口径。
-
+`usedBytes` MUST equal `attachmentBytes + markdownBytes`. Database indexes, tags, titles, and internal metadata do not count toward the user-visible quota. The server MUST use the same calculation as this endpoint when enforcing capacity limits on writes.

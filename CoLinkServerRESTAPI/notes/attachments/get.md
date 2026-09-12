@@ -1,6 +1,6 @@
-# 获取笔记附件元数据
+# Get Note Attachment Metadata
 
-获取附件的名称、类型、大小和摘要，不返回文件内容。
+Returns an attachment's name, type, size, and digest without returning its file content.
 
 ## Endpoint
 
@@ -10,11 +10,10 @@ GET /api/v1/note-attachments/:attachmentId
 
 ## Request
 
-| 参数 | 位置 | 类型 | 必需 | 说明 |
-|------|------|------|------|------|
-| `attachmentId` | path | UUID v4 | 是 | 附件 ID |
+| Parameter | Location | Type | Required | Description |
+|-----------|----------|------|----------|-------------|
+| `attachmentId` | path | UUID v4 | Yes | Attachment ID |
 
 ## Response
 
-成功响应的 `data` 为完整 [`Attachment`](README.md#attachment)。附件不存在或不属于当前账户时返回 `6005 attachment not found`。
-
+The `data` in a successful response is a complete [`Attachment`](README.md#attachment). If the attachment does not exist or does not belong to the current account, the server returns `6005 attachment not found`.

@@ -1,6 +1,6 @@
-# 下载笔记附件
+# Download Note Attachment
 
-按需下载附件的原始二进制内容，支持本地缓存和断点续传。
+Downloads an attachment's raw binary content on demand, with support for local caching and resumable downloads.
 
 ## Endpoint
 
@@ -10,24 +10,24 @@ GET /api/v1/note-attachments/:attachmentId/content
 
 ## Request
 
-| 参数 | 位置 | 类型 | 必需 | 说明 |
-|------|------|------|------|------|
-| `attachmentId` | path | UUID v4 | 是 | 附件 ID |
-| `Range` | header | string | 否 | 单字节区间，例如 `bytes=0-1048575` |
-| `If-None-Match` | header | string | 否 | 本地缓存的附件 `ETag` |
+| Parameter | Location | Type | Required | Description |
+|-----------|----------|------|----------|-------------|
+| `attachmentId` | path | UUID v4 | Yes | Attachment ID |
+| `Range` | header | string | No | Single byte range, for example `bytes=0-1048575` |
+| `If-None-Match` | header | string | No | `ETag` of the locally cached attachment |
 
 ## Response
 
-成功时直接返回原始二进制内容，不使用 JSON 响应封装。服务器 MUST 设置：
+On success, the server returns the raw binary content directly without a JSON response envelope. The server MUST set:
 
-| Header | 说明 |
-|--------|------|
+| Header | Description |
+|--------|-------------|
 | `Content-Type` | `Attachment.mediaType` |
-| `Content-Length` | 本次响应正文的字节数；Range 响应为区间长度 |
-| `ETag` | 双引号包裹的 `sha256` |
-| `Content-Disposition` | 使用安全编码后的 `fileName` |
+| `Content-Length` | Number of bytes in this response body; the range length for a range response |
+| `ETag` | The `sha256` enclosed in double quotes |
+| `Content-Disposition` | Safely encoded `fileName` |
 | `Accept-Ranges` | `bytes` |
 
-服务器 MUST 支持单区间 HTTP Range 请求和 `If-None-Match`。完整内容返回 HTTP `200`；Range 成功时返回 HTTP `206` 并设置 `Content-Range`；缓存仍有效时返回 HTTP `304`；无效或多区间 Range 返回 HTTP `416`。
+The server MUST support single-range HTTP Range requests and `If-None-Match`. A complete response returns HTTP `200`; a successful range response returns HTTP `206` and sets `Content-Range`; a still-valid cache returns HTTP `304`; and an invalid or multi-range request returns HTTP `416`.
 
-附件不存在或不属于当前账户时，以通用 JSON 错误封装返回 `6005 attachment not found`。
+If the attachment does not exist or does not belong to the current account, the server returns `6005 attachment not found` in the common JSON error envelope.

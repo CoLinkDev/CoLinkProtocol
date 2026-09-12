@@ -40,7 +40,4 @@ Header: `Authorization: Bearer <token>`
 
 ## Errors
 
-| Code | Message          | Description                            |
-|------|------------------|----------------------------------------|
-| 2010 | device not found | Device does not belong to this account |
-| 2003 | invalid key      | Public key format is invalid           |
+See [Error Codes](../error-codes.md#device-2xxx).

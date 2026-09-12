@@ -61,12 +61,4 @@ All push endpoints use the Bark response format:
 
 ## Error Codes
 
-| Code | Message | Description |
-|------|---------|-------------|
-| 1030 | unauthorized | Missing or invalid Bearer token (HTTP 401) |
-| 2010 | device not found | The `deviceId` is not a device of the authenticated account |
-| 2011 | device offline | Device exists but has no active WebSocket connection |
-| 2012 | push not supported | Device is online but does not support the Cloud WebSocket Protocol `1.1.0` Push capability |
-| 2013 | push timeout | Push was delivered to the WebSocket but no ACK received within 10 seconds |
-| 4001 | invalid request body | Request body could not be parsed |
-| 4002 | invalid parameter | Path or query parameter validation failed |
+See [Error Codes](../error-codes.md).

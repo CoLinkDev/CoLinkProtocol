@@ -24,17 +24,6 @@
 
 ## 模块错误码
 
-| Code | Message | HTTP 状态 | 说明 |
-|------|---------|-----------|------|
-| 6001 | `note not found` | 404 | 笔记不存在、已删除或不属于当前账户 |
-| 6002 | `revision conflict` | 412 | 笔记或标签的 `baseRevision` 与当前版本不一致 |
-| 6003 | `tag not found` | 404 | 标签不存在、已删除或不属于当前账户 |
-| 6004 | `tag name conflict` | 409 | 当前账户已有同名标签 |
-| 6005 | `attachment not found` | 404 | 附件不存在或不属于当前账户 |
-| 6006 | `attachment in use` | 409 | 附件仍被笔记引用，不能删除 |
-| 6007 | `note storage limit reached` | 413 | 单项限制或账户存储容量已达到上限 |
-| 6008 | `invalid note reference` | 409 | `tagIds` 或 `attachmentIds` 含无效、已删除或归属不符的资源 |
-| 6009 | `sync cursor expired` | 410 | 增量游标已失效，客户端必须重新执行完整快照同步 |
-| 6010 | `attachment checksum mismatch` | 422 | 上传内容的 SHA-256 与请求中的 `sha256` 不一致 |
+See [Error Codes](../error-codes.md#notes-6xxx).
 
 为避免泄露其他账户资源是否存在，跨账户访问 MUST 返回与资源不存在相同的错误。

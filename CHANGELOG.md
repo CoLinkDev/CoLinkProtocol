@@ -20,6 +20,9 @@ IMPORTANT RULES:
 - **Cloud notes error-code allocation (`CoLinkServerRESTAPI/README.md`, `CoLinkServerRESTAPI/notes/`)**
   - Moves Cloud Notes errors from the conflicting Update module `5xxx` range to the dedicated `6xxx` range without changing their relative meanings.
   - **Compatibility:** This changes Cloud Notes error-code values. Clients that consume the earlier `5xxx` values must recognize the corresponding `6xxx` values; valid request and response schemas are unchanged.
+- **Central error-code registry (`CoLinkServerRESTAPI/error-codes.md`)**
+  - Consolidates global and module-specific REST API error codes into one registry and replaces duplicated endpoint tables with links to the authoritative definitions.
+  - **Compatibility:** Documentation-only reorganization; error envelopes and runtime behavior are unchanged.
 
 ### 2026-09-12
 

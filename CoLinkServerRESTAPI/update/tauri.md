@@ -46,7 +46,4 @@ The endpoint returns `204 No Content` when there is no newer version, the target
 
 ## Errors
 
-| HTTP Status | Code | Description |
-|-------------|------|-------------|
-| 400 | 4002 | `currentVersion` is not a valid semantic version. |
-| 500 | -1 | Failed to query release metadata or read cached update artifacts. |
+See [Error Codes](../error-codes.md).

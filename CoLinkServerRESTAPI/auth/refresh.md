@@ -46,8 +46,4 @@ Refresh tokens are rotated. After a refresh token is used successfully, the same
 
 ## Errors
 
-| Code | Message               | Description                |
-|------|-----------------------|----------------------------|
-| 1011 | account disabled      | Account is disabled; all refresh tokens for the account are revoked |
-| 1020 | invalid refresh token | Token expired or malformed |
-| 1021 | token revoked         | Token has been revoked     |
+See [Error Codes](../error-codes.md#authentication-1xxx).

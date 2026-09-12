@@ -136,4 +136,4 @@ All parameters are optional unless required by the chosen path form. Parameters 
 
 ## Errors
 
-See `README.md` for the full error code table.
+See [Error Codes](../error-codes.md).

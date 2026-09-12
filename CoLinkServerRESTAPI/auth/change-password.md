@@ -42,7 +42,4 @@ Header: `Authorization: Bearer <token>`
 
 ## Errors
 
-| Code | Message            | Description              |
-|------|--------------------|--------------------------|
-| 1010 | invalid credentials| Old password is incorrect|
-| 1003 | password too short | New password < 8 chars   |
+See [Error Codes](../error-codes.md#authentication-1xxx).

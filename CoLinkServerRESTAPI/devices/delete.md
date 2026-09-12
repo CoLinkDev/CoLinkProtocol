@@ -24,6 +24,4 @@ Header: `Authorization: Bearer <token>`
 
 ## Errors
 
-| Code | Message          | Description       |
-|------|------------------|-------------------|
-| 2010 | device not found | Device ID invalid |
+See [Error Codes](../error-codes.md#device-2xxx).

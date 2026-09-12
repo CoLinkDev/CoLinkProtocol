@@ -51,6 +51,4 @@ When `hasUpdate` is `false`, `latest` is `null`.
 
 ## Errors
 
-| Code | Message | Description |
-|------|---------|-------------|
-| 5001 | platform not supported | Unsupported platform value |
+See [Error Codes](../error-codes.md#update-5xxx).

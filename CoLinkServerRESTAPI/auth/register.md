@@ -50,10 +50,4 @@ POST /api/v1/auth/register
 
 ## Errors
 
-| Code | Message              | Description          |
-|------|----------------------|----------------------|
-| 1001 | email already exists    | Email already in use    |
-| 1002 | invalid email format    | Malformed email         |
-| 1003 | password too short      | Less than 8 chars       |
-| 1004 | username already exists | Username already in use |
-| 1005 | invalid username        | Invalid username        |
+See [Error Codes](../error-codes.md#authentication-1xxx).

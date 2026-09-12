@@ -28,31 +28,4 @@ Successful attachment content downloads from `GET /api/v1/note-attachments/:atta
 
 ### Error Codes
 
-Code `0` = success. Positive codes are allocated to global categories or modules by the table below. Negative codes are global catch-all errors.
-
-Positive error-code ranges are allocated as follows:
-
-| Range | Allocation |
-|-------|------------|
-| `1xxx` | Authentication module |
-| `2xxx` | Device module |
-| `3xxx` | Reserved for global rate, quota, and request-policy errors |
-| `4xxx` | Reserved for global request parsing and parameter-validation errors |
-| `5xxx` | Update module |
-| `6xxx` | Notes module |
-
-Future modules MUST use an unallocated range and MUST NOT define module errors in the reserved `3xxx` or `4xxx` ranges.
-
-Global error codes:
-
-| Code | Message              | HTTP Status | Description                                    |
-|------|----------------------|-------------|------------------------------------------------|
-| -1   | internal error       | 500         | Unhandled error, catch-all fallback            |
-| 1030 | unauthorized         | 401         | Missing or invalid access token (middleware)   |
-| 3001 | rate limited         | 429         | Too many requests                              |
-| 4001 | invalid request body | 400         | JSON parse error or missing required fields    |
-| 4002 | invalid parameter    | 400         | Path/query parameter validation failure        |
-
-Notes:
-- Code `-1` is returned when no specific error code matches. Never expose internal details (stack trace, SQL) in the message.
-- Module-specific errors are documented by each module. The range table above is authoritative for allocating new codes.
+See [`error-codes.md`](error-codes.md) for the complete error code registry, including range allocation, global codes, and all module-specific codes.

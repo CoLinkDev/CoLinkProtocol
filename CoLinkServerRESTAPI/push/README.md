@@ -6,7 +6,7 @@ Server-initiated push notifications delivered to connected devices.
 
 The Push API allows any caller to send a notification payload to a specific device through the CoLink server. When the server receives a push request, it delivers the notification to the target device's active WebSocket connection and waits for the device to acknowledge receipt before returning an HTTP response.
 
-The API is compatible with the [Bark](https://github.com/Finb/Bark) request paths and parameters. Existing Bark integrations must change the base URL, use a CoLink `deviceId` as the target device, and add a Bearer token.
+The API is compatible with the [Bark](https://github.com/Finb/Bark) request paths and parameters. Existing Bark integrations must change the base URL, use a CoLink `deviceId` as the target device, and add a Bearer token. HTTP status behavior follows Bark's official [API V2 documentation](https://github.com/Finb/bark-server/blob/master/docs/API_V2.md) and [server implementation](https://github.com/Finb/bark-server/blob/master/route_push.go): invalid requests or targets return `400`, delivery failures return `500`, successful single pushes return `200`, and valid batch requests return `200` with per-device results.
 
 ## Target Device
 
@@ -42,7 +42,7 @@ The server only permits pushes to devices owned by the token's account. A missin
 
 ## Response Format
 
-All push endpoints use the Bark response format:
+All push endpoints use the Bark response format. The HTTP status follows Bark's rules independently from the CoLink error code in the response body:
 
 **Success:**
 ```json
@@ -59,14 +59,17 @@ All push endpoints use the Bark response format:
 { "code": 1030, "message": "unauthorized", "timestamp": 1722038400000 }
 ```
 
+| Outcome | HTTP Status |
+|---------|-------------|
+| Success | 200 |
+| Invalid request body or parameter | 400 |
+| Target device does not exist or is not owned by the caller | 400 |
+| Target is offline, does not support Push, or does not acknowledge before timeout | 500 |
+| Missing or invalid Bearer token | 401 |
+| Other server failure | 500 |
+
+Authentication is a CoLink extension to Bark, so its `401` status has no Bark equivalent. For a syntactically valid batch request, the top-level HTTP status is `200`; each item reports its own result. Request-level parsing, validation, and authentication failures reject the whole batch using the table above.
+
 ## Error Codes
 
-| Code | Message | Description |
-|------|---------|-------------|
-| 1030 | unauthorized | Missing or invalid Bearer token (HTTP 401) |
-| 2010 | device not found | The `deviceId` is not a device of the authenticated account |
-| 2011 | device offline | Device exists but has no active WebSocket connection |
-| 2012 | push not supported | Device is online but does not support the Cloud WebSocket Protocol `1.1.0` Push capability |
-| 2013 | push timeout | Push was delivered to the WebSocket but no ACK received within 10 seconds |
-| 4001 | invalid request body | Request body could not be parsed |
-| 4002 | invalid parameter | Path or query parameter validation failed |
+See [Error Codes](../error-codes.md).

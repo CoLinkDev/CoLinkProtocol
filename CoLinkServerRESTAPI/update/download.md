@@ -29,8 +29,4 @@ Content-Disposition: attachment
 
 ## Errors
 
-| Code | Message | Description |
-|------|---------|-------------|
-| 5001 | platform not supported | Unsupported platform value |
-| 5002 | release not found | Release does not exist for the platform and version |
-| 5003 | asset not found | Asset does not exist or cached file is missing |
+See [Error Codes](../error-codes.md#update-5xxx).

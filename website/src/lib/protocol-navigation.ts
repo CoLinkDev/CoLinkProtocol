@@ -52,6 +52,18 @@ export const protocolNavigation: NavigationMeta[] = [
   { path: 'CoLinkServerRESTAPI/auth/meta.json', data: { title: 'Authentication' } },
   { path: 'CoLinkServerRESTAPI/devices/meta.json', data: { title: 'Devices' } },
   {
+    path: 'CoLinkServerRESTAPI/notes/meta.json',
+    data: { title: 'Cloud Notes', pagesIndex: 'README' },
+  },
+  {
+    path: 'CoLinkServerRESTAPI/notes/notes-and-tags/meta.json',
+    data: { title: 'Notes and Tags', pagesIndex: 'README' },
+  },
+  {
+    path: 'CoLinkServerRESTAPI/notes/attachments/meta.json',
+    data: { title: 'Attachments', pagesIndex: 'README' },
+  },
+  {
     path: 'CoLinkServerRESTAPI/push/meta.json',
     data: { title: 'Push Notification', pagesIndex: 'README' },
   },

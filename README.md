@@ -33,7 +33,7 @@ Each device generates a local identity on first launch. A device identity consis
 
 ## Design Principles
 
-- Server protocol: HTTP REST + WebSocket, handles account system and message relay
+- Server protocol: HTTP REST + WebSocket, handles account system, account-scoped cloud data, and message relay
 - P2P protocol: peer discovery + WebSocket direct connection, handles device pairing
 - Business protocol: unified message format, transport-agnostic (works over both server relay and P2P direct connections)
 
@@ -50,6 +50,27 @@ There are three independent version axes. They are bumped separately and serve d
 The `vx` in message type names (e.g. `business.v1.version`, `auth.v1.challenge`) is a message schema major version. It is part of the message type string, but it is not the same thing as the advertised P2P or Business semver. Each document defines which advertised version governs a message. For example, `business.v1.key-exchange` is part of the P2P encrypted-session setup and is governed by the P2P Protocol Version.
 
 P2P, Business, and Cloud WebSocket each follow their own semantic versioning rules declared in their respective documents. Modifying one protocol MUST NOT automatically bump either of the others.
+
+### Message Type Namespace vs Version Axis
+
+The namespace in a message type name (e.g., `business.v1.*`) does not always indicate which version axis governs it. The governing axis is determined by the message's **role in the protocol stack**, not its namespace:
+
+| Message Type | Namespace | Governed By | Reason |
+|--------------|-----------|-------------|--------|
+| `protocol.hello` | protocol | P2P Protocol Version | Transport handshake |
+| `auth.v1.challenge` | auth | P2P Protocol Version | Authentication flow |
+| `business.v1.version` | business | P2P Protocol Version | Business session setup |
+| `business.v1.key-exchange` | business | **P2P Protocol Version** | Encrypted session setup |
+| `message.v1.text` | message | Business Protocol Version | Application message |
+| `file.v3.offer` | file | Business Protocol Version | Application feature |
+| `relay` | (cloud) | Cloud WebSocket Protocol Version | Cloud transport |
+
+**Key principle**: Messages involved in transport-layer setup (handshake, authentication, encryption negotiation) are governed by the P2P Protocol Version, even if their namespace suggests otherwise. Application-layer feature messages are governed by the Business Protocol Version.
+
+Each protocol document specifies which version axis governs the messages it defines. When checking version compatibility in code, always use the correct version variable:
+- P2P layer: check `protocolVersion` (from `protocol.hello`)
+- Business layer: check `businessVersion` (from `business.v1.version`)
+- Cloud layer: check `wsVersion` (from WebSocket connection URL)
 
 ## Compatibility Rules
 

@@ -45,9 +45,4 @@ Header: `Authorization: Bearer <token>`
 
 ## Errors
 
-| Code | Message              | Description                      |
-|------|----------------------|----------------------------------|
-| 2001 | device limit reached | Max devices per account exceeded |
-| 2002 | invalid device type  | Unsupported device type          |
-| 2003 | invalid device id    | Not a valid UUID v4              |
-| 2004 | device id conflict   | The submitted deviceId already exists |
+See [Error Codes](../error-codes.md#device-2xxx).

@@ -34,7 +34,4 @@ Header: `Authorization: Bearer <token>`
 
 ## Errors
 
-| Code | Message                 | Description             |
-|------|-------------------------|-------------------------|
-| 1004 | username already exists | Username already in use |
-| 1005 | invalid username        | Invalid username        |
+See [Error Codes](../error-codes.md#authentication-1xxx).

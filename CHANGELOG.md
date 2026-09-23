@@ -1,8 +1,41 @@
 # Changelog
 
-<!-- This changelog is provided solely to trace protocol changes and is not a normative protocol specification. For the actual protocol requirements, read the referenced protocol documents. -->
+<!--
+IMPORTANT RULES:
+1. This changelog is provided solely to trace protocol changes and is not a normative
+   protocol specification. For the actual protocol requirements, read the referenced
+   protocol documents.
+
+2. Published version sections are IMMUTABLE. Do not edit existing entries under released
+   version headings. Append new changes or create new version sections instead.
+
+3. See CoLinkProtocol/AGENTS.md for the full changelog policy.
+-->
+
 
 ## Server Protocol
+
+### 2026-09-24
+
+- **Cloud Notes (`CoLinkServerRESTAPI/notes/`)**
+  - Adds account-scoped Markdown notes with multiple tags and immutable reusable attachments. Attachments support SHA-256 integrity validation, reference lookup, guarded deletion, and authenticated on-demand downloads with byte ranges and ETags. The module also reports storage usage and quota.
+  - The server stores readable note and attachment content with account isolation. Clients can edit offline; synchronization transfers note content and attachment metadata, while attachment bodies are downloaded separately.
+  - Uses client-generated UUID v4 identifiers and revision-based conditional writes. Updates carry `baseRevision` in the JSON body and deletions carry it as a query parameter. A mismatch returns HTTP `412` with `6002 revision conflict`; clients retain both versions and use a three-way merge or explicit user resolution.
+  - Provides a paginated, account-consistent snapshot followed by cursor-based incremental synchronization in commit order. The protocol defines cursor persistence and expiry behavior, empty-page cursor advancement, tombstones, and suppression of stale upserts for deleted resources.
+  - Reserves previously used resource IDs. An unavailable attachment ID returns `6011 attachment ID unavailable`; clients replace the ID and all local references atomically, with no more than three automatic attempts. Active tag names are unique after whitespace trimming, Unicode NFC normalization, and default case folding.
+  - Documents the module through separate specifications for notes and tags, snapshots, incremental changes, attachments, and storage usage, with request and response examples and endpoint-specific error conditions. The server protocol index and documentation navigation include the complete Notes API surface.
+  - Notes APIs use the dedicated `6xxx` error range. **Compatibility:** Cloud Notes is an additive REST capability and does not change the P2P, Business, or Cloud WebSocket protocol versions. Clients implementing it must support its synchronization, revision-conflict, quota, and attachment-ID replacement rules.
+- **REST API documentation and error-code registry (`CoLinkServerRESTAPI/README.md`, `CoLinkServerRESTAPI/error-codes.md`)**
+  - Adds one authoritative registry for global and module-specific error codes, their HTTP statuses, meanings, and endpoint usage. Existing authentication, device, update, WebSocket ticket, and Push documents link to the registry; Notes documents retain endpoint-specific condition tables while using the registry as the canonical code definition.
+  - Defines error-code range allocation for current and future modules, including reserved global policy and validation ranges. It also records the standard `1030 unauthorized` response for `/api/v1/me` and the `2010 device not found` and `3001 rate limited` conditions for WebSocket ticket requests.
+  - Clarifies that REST JSON timestamps use RFC 3339 UTC strings while Cloud WebSocket envelope timestamps use Unix milliseconds. **Compatibility:** These documentation and registry changes consolidate existing contracts without changing their wire formats or runtime behavior.
+- **Device registration and Tauri updater errors (`CoLinkServerRESTAPI/devices/register.md`, `CoLinkServerRESTAPI/update/tauri.md`)**
+  - Device registration returns `2005 invalid device id` for a malformed `deviceId`; `2003 invalid key` is reserved for malformed public keys.
+  - Tauri updater failures use the standard REST error envelope. For a supported target, an invalid `currentVersion` returns `4002 invalid parameter` before release metadata is queried.
+  - **Compatibility:** Clients that identify an invalid registration device ID by error code must recognize `2005`. The Tauri updater can now report an invalid version even when no release is available.
+- **Bark-compatible Push HTTP statuses (`CoLinkServerRESTAPI/push/`)**
+  - Invalid requests or targets return HTTP `400`, delivery failures return `500`, successful single pushes return `200`, and syntactically valid batches return `200` with per-device result codes. Missing or invalid Bearer authentication returns `401` as a CoLink extension.
+  - **Compatibility:** Clients that depend on the previous Push HTTP statuses must update their handling. Response-body formats and CoLink error codes are unchanged; clients should inspect nonzero body codes, including individual batch results.
 
 ### 2026-08-26
 

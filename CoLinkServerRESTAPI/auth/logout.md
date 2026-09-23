@@ -40,6 +40,4 @@ Header: `Authorization: Bearer <token>`
 
 ## Errors
 
-| Code | Message               | Description                |
-|------|-----------------------|----------------------------|
-| 1020 | invalid refresh token | Token expired or malformed |
+See [Error Codes](../error-codes.md#authentication-1xxx).

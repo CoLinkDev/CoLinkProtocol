@@ -48,7 +48,4 @@ POST /api/v1/auth/login
 
 ## Errors
 
-| Code | Message             | Description              |
-|------|---------------------|--------------------------|
-| 1010 | invalid credentials | Wrong identifier or password |
-| 1011 | account disabled    | Account has been banned  |
+See [Error Codes](../error-codes.md#authentication-1xxx).

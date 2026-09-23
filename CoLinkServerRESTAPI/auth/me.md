@@ -31,11 +31,11 @@ No body required.
 
 ## Behavior
 
-- Returns 401 if the access token is expired or invalid
+- Returns HTTP 401 with `1030 unauthorized` if the access token is missing, expired, invalid, or belongs to a disabled account
 - Client can use this to check token validity on startup:
   - 200 → token valid, proceed
   - 401 → try refresh; if refresh fails → re-login
 
 ## Errors
 
-Standard 401 unauthorized (no specific error code — handled by auth middleware).
+See [Error Codes](../error-codes.md#global).

@@ -1,0 +1,35 @@
+# List Tags
+
+## Endpoint
+
+```http
+GET /api/v1/note-tags
+```
+
+## Request
+
+There are no request parameters.
+
+## Response
+
+```json
+{
+  "code": 0,
+  "data": {
+    "tags": [
+      {
+        "tagId": "c712c0b5-3938-44c3-a3ef-7f09f86745f9",
+        "name": "Work",
+        "revision": 2,
+        "createdAt": "2026-09-10T05:00:00Z",
+        "updatedAt": "2026-09-12T05:00:00Z"
+      }
+    ]
+  },
+  "message": "ok"
+}
+```
+
+## Errors
+
+See [Error Codes](../../error-codes.md#notes-6xxx).

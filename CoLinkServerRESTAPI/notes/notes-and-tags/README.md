@@ -119,6 +119,8 @@ Markdown uses a textual three-way merge. The title, `tagIds`, and `attachmentIds
 
 If the cloud note has been deleted while local edits are still pending, the client MUST retain the local content and prompt the user either to discard the local changes or save them as a new note with a new `noteId`. The client MUST NOT implicitly restore a deleted note using the old `noteId`. A delete request encountering a newer cloud revision likewise returns a revision conflict; deletion can proceed only after user confirmation based on the latest revision.
 
+When note creation returns `6012 note ID unavailable`, the client MUST query the submitted `noteId`. If an active note exists, identical content confirms an earlier successful creation and different content enters normal conflict handling. If the query returns `6001 note not found`, the ID is reserved by a tombstone; the client MUST enter the cloud-deleted conflict flow above and MUST NOT retry creation with the old ID.
+
 The title, Markdown, tag set, and attachment set form one atomic note update. Tag rename conflicts are resolved using the tag's `revision` and do not involve a Markdown three-way merge.
 
 ### Recovering from Invalid References

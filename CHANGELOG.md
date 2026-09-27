@@ -15,6 +15,12 @@ IMPORTANT RULES:
 
 ## Server Protocol
 
+### 2026-09-27
+
+- **Cloud Notes note-ID tombstones (`CoLinkServerRESTAPI/notes/`)**
+  - Adds `6012 note ID unavailable` for create requests whose `noteId` is already reserved by an active note or tombstone. Clients query the ID to distinguish an earlier successful create from a tombstone and route tombstones through cloud-deletion conflict handling without retrying the old ID.
+  - **Compatibility:** This changes duplicate-note creation from HTTP `400` / `4002` to HTTP `409` / `6012`; it does not change the P2P, Business, or Cloud WebSocket protocol versions. An older client talking to an updated server, or an updated client talking to an older server, treats the unrecognized response as a generic synchronization failure and preserves the local pending note. Deploy the server before updated clients to enable tombstone conflict recovery immediately; mixed-version operation remains non-destructive but requires both sides to be updated before synchronization can complete for this case.
+
 ### 2026-09-24
 
 - **Cloud Notes (`CoLinkServerRESTAPI/notes/`)**

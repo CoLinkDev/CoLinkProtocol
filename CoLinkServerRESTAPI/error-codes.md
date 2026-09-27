@@ -85,3 +85,4 @@ The Push API uses Bark-specific HTTP status rules. Its response body retains the
 | 6009 | sync cursor expired | 410 | Incremental sync cursor has expired; client must perform a full snapshot sync | [snapshot](notes/notes-and-tags/snapshot.md), [incremental sync](notes/notes-and-tags/changes.md) |
 | 6010 | attachment checksum mismatch | 422 | Uploaded content SHA-256 does not match the `sha256` in the request | [upload attachment](notes/attachments/upload.md) |
 | 6011 | attachment ID unavailable | 409 | The submitted `attachmentId` is already reserved by an active attachment or tombstone in this account | [upload attachment](notes/attachments/upload.md) |
+| 6012 | note ID unavailable | 409 | The submitted `noteId` is already reserved by an active note or tombstone in this account | [create-note](notes/notes-and-tags/create-note.md) |

@@ -59,7 +59,7 @@ POST /api/v1/notes
 
 On success, the server returns the complete [`Note`](README.md#note) with an initial `revision` of 1.
 
-If the same `noteId` already exists, the server returns `4002 invalid parameter`.
+If the same `noteId` is already reserved by an active note or tombstone, the server returns `6012 note ID unavailable`.
 
 When the request outcome is uncertain, the client queries the `noteId` as defined in [Handling Uncertain Request Outcomes](README.md#handling-uncertain-request-outcomes) and MUST NOT retry creation with a new ID.
 
@@ -68,8 +68,9 @@ When the request outcome is uncertain, the client queries the `noteId` as define
 | Code | Message | HTTP Status | Description |
 |------|---------|-------------|-------------|
 | 4001 | invalid request body | 400 | JSON parse error or missing required fields |
-| 4002 | invalid parameter | 400 | `noteId` is not a valid UUID v4, already exists, or `title` contains control characters |
+| 4002 | invalid parameter | 400 | `noteId` is not a valid UUID v4 or `title` contains control characters |
 | 6007 | note storage limit reached | 413 | `markdown` byte length exceeds `maxMarkdownBytes` or the account's Notes storage quota is reached |
 | 6008 | invalid note reference | 409 | `tagIds` or `attachmentIds` contains an invalid, deleted, or unowned resource |
+| 6012 | note ID unavailable | 409 | `noteId` is already reserved by an active note or tombstone |
 
 See [Error Codes](../../error-codes.md#notes-6xxx).

@@ -130,6 +130,20 @@ IMPORTANT RULES:
 
 ## Business Protocol
 
+### v1.18.0 — 2026-10-03
+
+- **Remote Camera Stream v2 (`CoLinkBusiness/camera-v2.md`)**
+  - **New protocol:** Introduces `camera.v2.*`, superseding `camera.v1.*` when both peers advertise Business Protocol Version ≥ 1.18.0. The control plane keeps the same message set (`list / list-result / open / open-ack / ready / alive / config / config-ack / close / frame`).
+  - **LAN data plane: HTTPS replaces the plaintext WebSocket.** The host serves `GET /camera/v2/{sessionId}` over TLS on its P2P service port, authenticated with `Authorization: Bearer <streamToken>`. The response body is an unbounded stream of frames using the unchanged 16-byte `camera.v1` header (version `0x01`); only the `frame` kind is used. Port multiplexing, anti-downgrade, and TLS parameters follow File Transfer v3.
+  - **Certificate pinning:** `camera.v2.open-ack` carries `streamToken` (CSPRNG, ≥256-bit, base64url, single-use) and `certFingerprint` (`sha256:` over the DER certificate). Both are present only when the control plane runs over an AEAD-protected direct P2P connection; otherwise the session uses relay mode. A fingerprint mismatch closes the session with `colink:camera.tls_pin_mismatch.v1` and MUST NOT fall back to relay.
+  - **Promised modes:** `capabilities.resolutions` lists the modes the host commits to deliver, based on hardware and encoder capability only and independent of the transport. Each resolution carries its own `fps` array of `{ min, max }` ranges; `min == max` denotes a fixed rate. The `fpsRange` field is removed.
+  - **Exact selection:** `camera.v2.open` and `camera.v2.config` require `width`, `height`, and `fps`. A request must match a promised mode exactly; the host applies it without clamping or substitution and rejects anything else with `colink:camera.unsupported_params.v1`. The host never lowers the mode on its own initiative; mode changes, including adaptation to relay bandwidth, are decided by the controller.
+  - **Unambiguous mode boundary:** An applied `camera.v2.config-ack` carries `effectiveFromSequence`, identifying the first new-mode frame. The host drops unsent old-mode frames and starts the new mode at that keyframe, allowing controllers to switch decoders safely across independent control and data connections.
+  - **Single session per camera:** A host ≥ 1.18.0 allows at most one active session per camera across `camera.v1` and `camera.v2`, and rejects further opens with `colink:camera.busy.v1`.
+  - **Lifetime:** A missed `camera.v2.alive` window (recommended: 15s) closes the session with `colink:camera.alive_timeout.v1`; the paused state of v1 is removed. Data connection loss closes the session with `colink:camera.data_plane_closed.v1`, and the data connection cannot be resumed.
+  - **Flow control:** The host drops frames instead of queuing under congestion; for H.264 it drops until the next keyframe. Sequence gaps are permitted.
+  - **Compatibility:** Requires both peers ≥ 1.18.0. With a host at 1.10.0 – 1.17.x, the controller uses `camera.v1.*`. A host ≥ 1.18.0 continues to serve `camera.v1.*` and `/camera-stream/{sessionId}` for controllers below 1.18.0. Hosts below 1.18.0 silently ignore `camera.v2.*`. `camera.md` is marked deprecated and remains normative for older peers.
+
 ### v1.17.0 — 2026-09-02
 
 - **Command Acknowledgement (`CoLinkBusiness/system-control.md`)**

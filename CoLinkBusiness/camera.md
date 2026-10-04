@@ -1,5 +1,7 @@
 # Remote Camera Stream
 
+> **Deprecated.** Peers whose effective Business Protocol Version is 1.18.0 or later MUST use [Remote Camera Stream v2](camera-v2.md) (`camera.v2.*`). This document remains normative for peers where either side is below 1.18.0; see [Version Compatibility](#version-compatibility).
+
 Stream live video from a host device's camera to a controller device.
 
 ## Design Overview
@@ -586,3 +588,4 @@ sequenceDiagram
 - `camera.v1.*` requires Business Protocol Version 1.10.0 or later.
 - Before sending `camera.v1.list` or `camera.v1.open`, a controller MUST verify that the target's advertised `businessVersion` is valid, has the same major version, and is at least 1.10.0. If the version is missing, malformed, incompatible, or too old, the controller MUST NOT send these messages.
 - A host that predates Version 1.10.0 treats incoming `camera.v1.*` messages as unknown Business messages and silently ignores them according to the standard forward-compatibility rule.
+- When both peers advertise Version 1.18.0 or later, the controller MUST use `camera.v2.*` instead. A host at 1.18.0 or later MUST continue to serve `camera.v1.*` for controllers below 1.18.0, and allows at most one active session per camera across `camera.v1` and `camera.v2`; it rejects a second open for a held camera with `colink:camera.busy.v1`. See [`camera-v2.md`](camera-v2.md#version-compatibility).

@@ -1,6 +1,6 @@
 # CoLink Business Protocol
 
-> **Current Protocol Version: 1.17.0**
+> **Current Protocol Version: 1.18.0**
 >
 > The business protocol uses semantic versioning, independent of the transport layer (P2P / Cloud Relay).
 > - **Major** bump: breaking changes — peers with different major versions cannot exchange business messages.
@@ -23,7 +23,8 @@
 | `filesystem.md` | Remote filesystem browse, download, and upload |
 | `system-control.md` | Remote system control |
 | `terminal.md` | Remote terminal control |
-| `camera.md` | Remote camera stream |
+| `camera-v2.md` | Remote camera stream (current) |
+| `camera.md` | Remote camera stream (deprecated, used for peers below v1.18.0) |
 
 ## Version Exchange
 
